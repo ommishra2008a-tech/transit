@@ -23,9 +23,9 @@ function RoleRedirect() {
 function AppLayout({ children }) {
   const { isAuth } = useAuth();
   return (
-    <div className="min-h-screen bg-surface-950 text-surface-100">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {isAuth && <Navbar />}
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 flex flex-col">{children}</main>
     </div>
   );
 }
