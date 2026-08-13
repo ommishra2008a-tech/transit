@@ -1,4 +1,4 @@
-import { useNavigate } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bus, ArrowRight, ChevronRight, Navigation } from 'lucide-react';
 import StatusBadge from '../StatusBadge/StatusBadge';
 import { Card } from '../ui/Card';
