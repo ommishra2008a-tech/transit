@@ -11,13 +11,14 @@ const Button = forwardRef(({
   ...props
 }, ref) => {
   const variants = {
-    default: 'bg-primary-700 text-white hover:bg-primary-800 border-primary-700 shadow-sm',
-    secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200 border-slate-200',
-    outline: 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50 hover:text-primary-700 hover:border-primary-300',
-    ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-transparent',
+    default: 'bg-blue-700 hover:bg-blue-800 text-white border-blue-700 shadow-sm',
+    primary: 'bg-blue-700 hover:bg-blue-800 text-white border-blue-700 shadow-sm',
+    secondary: 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600 border-slate-200 dark:border-slate-600',
+    outline: 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/60 hover:text-blue-700 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-700',
+    ghost: 'bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 border-transparent',
     danger: 'bg-red-600 text-white hover:bg-red-700 border-red-600 shadow-sm',
     success: 'bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600 shadow-sm',
-    link: 'bg-transparent text-primary-700 hover:underline p-0 border-transparent',
+    link: 'bg-transparent text-blue-700 dark:text-blue-400 hover:underline p-0 border-transparent',
   };
 
   const sizes = {
