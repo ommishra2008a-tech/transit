@@ -71,7 +71,7 @@ export default function DriverDashboard() {
   return (
     <div className="p-4 md:p-6 max-w-2xl mx-auto pb-24 md:pb-6 space-y-5">
       {/* Welcome */}
-      <div className="animate-fade-in bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
+      <div className="animate-fade-in bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#142d76]">
             Welcome, {user?.name || 'Driver'} 👋

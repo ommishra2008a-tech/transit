@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Navbar from '../components/Navbar/Navbar';
 import Login from '../pages/auth/Login';
@@ -22,9 +22,12 @@ function RoleRedirect() {
 
 function AppLayout({ children }) {
   const { isAuth } = useAuth();
+  const location = useLocation();
+  const isLoginPage = location.pathname === '/login';
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {isAuth && <Navbar />}
+      {isAuth && !isLoginPage && <Navbar />}
       <main className="flex-1 flex flex-col">{children}</main>
     </div>
   );
