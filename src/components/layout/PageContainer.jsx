@@ -43,8 +43,8 @@ export default function PageContainer({
   return (
     <div className={`flex-1 bg-slate-50 dark:bg-slate-950 ${className}`}>
       <div
-        className={`${maxWidth} mx-auto w-full space-y-5 ${
-          noPadding ? '' : 'px-4 sm:px-5 md:px-6 lg:px-8 py-4 sm:py-5 md:py-6'
+        className={`${maxWidth} mx-auto w-full space-y-4 ${
+          noPadding ? '' : 'px-3.5 sm:px-5 md:px-6 py-3.5 sm:py-5'
         }`}
       >
         {children}
