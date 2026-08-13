@@ -10,6 +10,8 @@ import { formatSpeed } from '../../utils/geo';
 import Button from '../../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
+import PageContainer from '../../components/layout/PageContainer';
+import ResponsiveGrid from '../../components/layout/ResponsiveGrid';
 
 export default function ActiveTrip() {
   const { user } = useAuth();
@@ -81,110 +83,110 @@ export default function ActiveTrip() {
 
   if (loading) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-[60vh]">
-        <div className="w-8 h-8 border-3 border-primary-600/30 border-t-primary-600 rounded-full animate-spin" />
+      <div className="flex-1 flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="w-8 h-8 border-3 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
       </div>
     );
   }
 
   if (completed) {
     return (
-      <div className="p-4 md:p-6 max-w-2xl mx-auto">
-        <Card className="p-8 text-center animate-slide-up border-emerald-200 bg-emerald-50/30">
-          <CheckCircle size={56} className="text-emerald-600 mx-auto mb-4" />
-          <h1 className="text-2xl font-extrabold text-slate-900 mb-1">Trip Completed ✓</h1>
-          <p className="text-slate-500 text-sm mb-6">Your trip has been recorded successfully</p>
+      <PageContainer narrow>
+        <Card className="p-6 sm:p-8 text-center animate-slide-up border-emerald-200 dark:border-emerald-900 bg-emerald-50/30 dark:bg-emerald-950/30">
+          <CheckCircle size={48} className="text-emerald-600 dark:text-emerald-400 mx-auto mb-3 sm:mb-4" />
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mb-1">Trip Completed ✓</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mb-5 sm:mb-6">Your trip has been recorded successfully</p>
 
-          <div className="grid grid-cols-2 gap-3 mb-6 text-left">
-            <div className="p-3.5 rounded-xl bg-white border border-slate-200">
-              <p className="text-xs font-semibold text-slate-400">Start Time</p>
-              <p className="text-sm font-bold text-slate-800 mt-0.5">
+          <ResponsiveGrid cols={2} gap={3}>
+            <div className="p-3 sm:p-3.5 rounded-lg sm:rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <p className="text-[10px] sm:text-xs font-semibold text-slate-400 dark:text-slate-500">Start Time</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">
                 {new Date(trip.start_time).toLocaleTimeString()}
               </p>
             </div>
-            <div className="p-3.5 rounded-xl bg-white border border-slate-200">
-              <p className="text-xs font-semibold text-slate-400">End Time</p>
-              <p className="text-sm font-bold text-slate-800 mt-0.5">
+            <div className="p-3 sm:p-3.5 rounded-lg sm:rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <p className="text-[10px] sm:text-xs font-semibold text-slate-400 dark:text-slate-500">End Time</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">
                 {completedTrip?.end_time ? new Date(completedTrip.end_time).toLocaleTimeString() : '--'}
               </p>
             </div>
-            <div className="p-3.5 rounded-xl bg-white border border-slate-200">
-              <p className="text-xs font-semibold text-slate-400">Updates Sent</p>
-              <p className="text-sm font-bold text-primary-700 mt-0.5">{updateCount}</p>
+            <div className="p-3 sm:p-3.5 rounded-lg sm:rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <p className="text-[10px] sm:text-xs font-semibold text-slate-400 dark:text-slate-500">Updates Sent</p>
+              <p className="text-xs sm:text-sm font-bold text-blue-700 dark:text-blue-400 mt-0.5">{updateCount}</p>
             </div>
-            <div className="p-3.5 rounded-xl bg-white border border-slate-200">
-              <p className="text-xs font-semibold text-slate-400">Bus</p>
-              <p className="text-sm font-bold text-slate-800 mt-0.5">{bus?.bus_number}</p>
+            <div className="p-3 sm:p-3.5 rounded-lg sm:rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <p className="text-[10px] sm:text-xs font-semibold text-slate-400 dark:text-slate-500">Bus</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">{bus?.bus_number}</p>
             </div>
-          </div>
+          </ResponsiveGrid>
 
           <Button
             variant="primary"
             size="lg"
-            className="w-full rounded-2xl h-12"
+            className="w-full rounded-xl sm:rounded-2xl h-11 sm:h-12 mt-5 sm:mt-6 text-sm"
             onClick={() => navigate('/driver')}
           >
-            <ArrowLeft size={18} /> Back to Dashboard
+            <ArrowLeft size={16} /> Back to Dashboard
           </Button>
         </Card>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-5">
-      <Card className="animate-fade-in border-emerald-200 overflow-hidden">
-        <CardHeader className="bg-emerald-50/50 border-b border-emerald-100 flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-xl">{bus?.bus_number}</CardTitle>
-            <p className="text-xs font-semibold text-slate-500 mt-0.5">Trip Currently Active</p>
+    <PageContainer narrow>
+      <Card className="animate-fade-in border-emerald-200 dark:border-emerald-900 overflow-hidden">
+        <CardHeader className="bg-emerald-50/50 dark:bg-emerald-950/40 border-b border-emerald-100 dark:border-emerald-900 flex-row items-center justify-between">
+          <div className="min-w-0">
+            <CardTitle className="text-lg sm:text-xl truncate">{bus?.bus_number}</CardTitle>
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">Trip Currently Active</p>
           </div>
           <Badge variant="running" pulse>
             TRIP RUNNING
           </Badge>
         </CardHeader>
-        <CardContent className="p-5">
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+        <CardContent className="p-4 sm:p-5">
+          <ResponsiveGrid cols={2} gap={3}>
+            <div className="p-3 sm:p-3.5 rounded-lg sm:rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-1.5 mb-1">
-                <Radio size={16} className={isTracking && latitude ? 'text-emerald-600 animate-pulse' : 'text-red-500'} />
-                <p className="text-xs font-semibold text-slate-500">GPS Signal</p>
+                <Radio size={14} className={isTracking && latitude ? 'text-emerald-600 animate-pulse' : 'text-red-500'} />
+                <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">GPS Signal</p>
               </div>
-              <p className="text-sm font-bold text-slate-900">
+              <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
                 {isTracking && latitude ? 'Active' : geoError ? 'Error' : 'Acquiring...'}
               </p>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <div className="p-3 sm:p-3.5 rounded-lg sm:rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-1.5 mb-1">
-                <Gauge size={16} className="text-primary-600" />
-                <p className="text-xs font-semibold text-slate-500">Speed</p>
+                <Gauge size={14} className="text-blue-600 dark:text-blue-400" />
+                <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">Speed</p>
               </div>
-              <p className="text-sm font-bold text-slate-900">{formatSpeed(speed)}</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{formatSpeed(speed)}</p>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <div className="p-3 sm:p-3.5 rounded-lg sm:rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-1.5 mb-1">
-                <Navigation size={16} className="text-primary-600" />
-                <p className="text-xs font-semibold text-slate-500">Position</p>
+                <Navigation size={14} className="text-blue-600 dark:text-blue-400" />
+                <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">Position</p>
               </div>
-              <p className="text-xs font-mono font-bold text-slate-800">
+              <p className="text-[10px] sm:text-xs font-mono font-bold text-slate-800 dark:text-slate-200">
                 {latitude ? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` : '--'}
               </p>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <div className="p-3 sm:p-3.5 rounded-lg sm:rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-1.5 mb-1">
-                <Send size={16} className="text-primary-600" />
-                <p className="text-xs font-semibold text-slate-500">Updates Sent</p>
+                <Send size={14} className="text-blue-600 dark:text-blue-400" />
+                <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">Updates</p>
               </div>
-              <p className="text-sm font-bold text-primary-700">{updateCount}</p>
+              <p className="text-xs sm:text-sm font-bold text-blue-700 dark:text-blue-400">{updateCount}</p>
             </div>
-          </div>
+          </ResponsiveGrid>
 
           {geoError && (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold">
-              GPS Signal Warning: {geoError}
+            <div className="mt-3 p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 text-[10px] sm:text-xs font-semibold">
+              GPS Warning: {geoError}
             </div>
           )}
         </CardContent>
@@ -193,7 +195,7 @@ export default function ActiveTrip() {
       <Button
         variant="danger"
         size="lg"
-        className="w-full rounded-2xl h-14 text-base font-extrabold shadow-lg shadow-red-600/20 cursor-pointer"
+        className="w-full rounded-xl sm:rounded-2xl h-12 sm:h-14 text-sm sm:text-base font-extrabold shadow-lg shadow-red-600/20 cursor-pointer"
         onClick={handleEndTrip}
         disabled={ending}
       >
@@ -204,11 +206,11 @@ export default function ActiveTrip() {
           </>
         ) : (
           <>
-            <Square size={20} className="fill-current" />
+            <Square size={18} className="fill-current" />
             END TRIP
           </>
         )}
       </Button>
-    </div>
+    </PageContainer>
   );
 }

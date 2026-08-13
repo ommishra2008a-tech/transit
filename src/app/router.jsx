@@ -26,9 +26,14 @@ function AppLayout({ children }) {
   const isLoginPage = location.pathname === '/login';
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="min-h-dvh min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
       {isAuth && !isLoginPage && <Navbar />}
-      <main className="flex-1 flex flex-col pb-[60px] md:pb-0">{children}</main>
+      <main className="flex-1 flex flex-col pb-[env(safe-area-inset-bottom,0px)]">
+        {/* Add bottom padding for mobile dock nav — only on pages that show navbar */}
+        <div className={`flex-1 flex flex-col ${isAuth && !isLoginPage ? 'pb-16 md:pb-0' : ''}`}>
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

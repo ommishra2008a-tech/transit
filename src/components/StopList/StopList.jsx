@@ -4,81 +4,89 @@ export default function StopList({ stops, currentStopIndex = 0 }) {
   }
 
   return (
-    <div className="relative pl-8 py-2">
-      {/* Vertical Connecting Line (Positioned at 9px to line up with 20px dot center) */}
-      <div className="absolute left-[9px] top-4 bottom-6 w-[2.5px] bg-slate-200 dark:bg-slate-700 pointer-events-none" />
+    <div className="relative py-1">
+      {stops.map((stop, idx) => {
+        const isFirst = idx === 0;
+        const isLast = idx === stops.length - 1;
+        const isCurrent = idx === currentStopIndex;
+        const isNext = idx === currentStopIndex + 1;
+        const isCompleted = idx < currentStopIndex;
 
-      <div className="space-y-6">
-        {stops.map((stop, idx) => {
-          const isFirst = idx === 0;
-          const isLast = idx === stops.length - 1;
-          const isCurrent = idx === currentStopIndex;
-          const isNext = idx === currentStopIndex + 1;
+        // Badge config
+        let badgeText = null;
+        let badgeClass = '';
 
-          let badgeText = null;
-          let badgeBg = "";
+        if (isFirst) {
+          badgeText = 'ORIGIN';
+          badgeClass = 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
+        } else if (isLast) {
+          badgeText = 'TERMINAL';
+          badgeClass = 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border-blue-200 dark:border-blue-800';
+        } else if (isNext) {
+          badgeText = 'NEXT';
+          badgeClass = 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border-blue-200 dark:border-blue-800';
+        }
 
-          if (isFirst) {
-            badgeText = "ORIGIN";
-            badgeBg = "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800";
-          } else if (isLast) {
-            badgeText = "TERMINAL";
-            badgeBg = "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 border-blue-200 dark:border-blue-800";
-          } else if (isCurrent) {
-            badgeText = "CURRENT";
-            badgeBg = "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border-amber-200 dark:border-amber-800";
-          } else if (isNext) {
-            badgeText = "NEXT";
-            badgeBg = "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800";
-          }
+        // Dot color
+        const isHighlighted = isFirst || isCurrent || isNext || isLast;
+        const dotColor = isFirst || isCurrent
+          ? 'border-emerald-500 bg-white dark:bg-slate-900'
+          : isNext || isLast
+          ? 'border-blue-500 bg-white dark:bg-slate-900'
+          : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900';
 
-          return (
-            <div key={stop.id || stop.stop_name || idx} className="relative flex items-center justify-between gap-3 animate-fade-in group">
-              {/* Dot Icon on the line (Positioned at left-0 inside pl-8 wrapper) */}
-              <div
-                className={`absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 flex items-center justify-center bg-white dark:bg-slate-900 transition-all ${
-                  isFirst || isCurrent
-                    ? "border-emerald-600 shadow-xs shadow-emerald-500/20"
-                    : isNext || isLast
-                    ? "border-blue-600 shadow-xs shadow-blue-500/20"
-                    : "border-slate-300 dark:border-slate-700"
-                }`}
-              >
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    isFirst || isCurrent
-                      ? "bg-emerald-600 animate-pulse"
-                      : isNext || isLast
-                      ? "bg-blue-600"
-                      : "bg-slate-300 dark:bg-slate-600"
-                  }`}
-                />
+        const innerDotColor = isFirst || isCurrent
+          ? 'bg-emerald-500'
+          : isNext || isLast
+          ? 'bg-blue-500'
+          : 'bg-slate-300 dark:bg-slate-600';
+
+        // Connecting line color
+        const lineColor = isFirst || isCurrent
+          ? 'bg-blue-400 dark:bg-blue-500'
+          : 'bg-slate-200 dark:bg-slate-700';
+
+        // Text color
+        const nameColor = isNext
+          ? 'text-blue-600 dark:text-blue-400'
+          : isHighlighted
+          ? 'text-slate-900 dark:text-white'
+          : 'text-slate-600 dark:text-slate-400';
+
+        return (
+          <div key={stop.id || stop.stop_name || idx} className="relative flex items-start">
+            {/* Timeline column: dot + line */}
+            <div className="flex flex-col items-center mr-3.5 flex-shrink-0" style={{ width: '24px' }}>
+              {/* Dot */}
+              <div className={`w-5 h-5 rounded-full border-[2.5px] flex items-center justify-center z-10 ${dotColor}`}>
+                <div className={`w-2 h-2 rounded-full ${innerDotColor}`} />
               </div>
+              {/* Connecting line (not on last item) */}
+              {!isLast && (
+                <div className={`w-[3px] flex-1 min-h-[32px] rounded-full ${lineColor}`} />
+              )}
+            </div>
 
-              {/* Stop Info */}
-              <div className="flex-1 min-w-0 pl-1">
-                <p className={`text-sm sm:text-base font-bold truncate ${
-                  isFirst || isCurrent
-                    ? "text-slate-900 dark:text-white"
-                    : "text-slate-700 dark:text-slate-300"
-                }`}>
+            {/* Content column */}
+            <div className="flex-1 flex items-center justify-between gap-2 pb-5 min-w-0">
+              <div className="min-w-0">
+                <p className={`text-[13px] sm:text-sm font-bold truncate ${nameColor}`}>
                   {stop.stop_name}
                 </p>
-                {stop.stop_order !== undefined && (
-                  <p className="text-[11px] font-mono text-slate-400 dark:text-slate-500">Stop #{stop.stop_order}</p>
-                )}
+                <p className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                  Stop #{stop.stop_order !== undefined ? stop.stop_order : idx + 1}
+                </p>
               </div>
 
-              {/* Badge */}
               {badgeText && (
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border flex-shrink-0 ${badgeBg}`}>
+                <span className={`px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider border flex-shrink-0 ${badgeClass}`}>
                   {badgeText}
                 </span>
               )}
             </div>
-          );
-        })}
-      </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

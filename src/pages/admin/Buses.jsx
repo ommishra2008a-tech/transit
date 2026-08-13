@@ -3,6 +3,8 @@ import { Bus as BusIcon } from 'lucide-react';
 import { getBuses } from '../../services/bus.service';
 import StatusBadge from '../../components/StatusBadge/StatusBadge';
 import { Card } from '../../components/ui/Card';
+import PageContainer from '../../components/layout/PageContainer';
+import PageHeader from '../../components/layout/PageHeader';
 
 export default function Buses() {
   const [buses, setBuses] = useState([]);
@@ -17,23 +19,53 @@ export default function Buses() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-6xl mx-auto space-y-3">
+      <PageContainer>
         {[1, 2, 3].map((i) => <div key={i} className="skeleton h-16 rounded-2xl" />)}
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
-      <div className="animate-fade-in bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">Bus Fleet Management 🚌</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">{buses.length} registered bus vehicles</p>
-        </div>
+    <PageContainer>
+      <PageHeader
+        light
+        title="Bus Fleet Management 🚌"
+        subtitle={`${buses.length} registered bus vehicles`}
+      />
+
+      {/* Fleet Table — Mobile: card list, Desktop: table */}
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-3">
+        {buses.map((bus) => (
+          <Card key={bus.id} className="p-3.5 bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 animate-fade-in">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+                  <BusIcon size={16} />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-bold text-slate-900 dark:text-white text-sm truncate">{bus.bus_number}</p>
+                  <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate">{bus.registration_number}</p>
+                </div>
+              </div>
+              <StatusBadge status={bus.status} />
+            </div>
+            <div className="mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+              <div>
+                <span className="text-slate-400 dark:text-slate-500">Route: </span>
+                <span className="text-slate-700 dark:text-slate-300">{bus.expand?.route_id?.route_name || 'Unassigned'}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 dark:text-slate-500">Driver: </span>
+                <span className="text-slate-700 dark:text-slate-300">{bus.expand?.driver_id?.name || 'Unassigned'}</span>
+              </div>
+            </div>
+          </Card>
+        ))}
       </div>
 
-      {/* Fleet Table */}
-      <Card className="overflow-hidden animate-fade-in bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800">
+      {/* Desktop table view */}
+      <Card className="overflow-hidden animate-fade-in bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left border-collapse">
             <thead>
@@ -70,6 +102,6 @@ export default function Buses() {
           </table>
         </div>
       </Card>
-    </div>
+    </PageContainer>
   );
 }
