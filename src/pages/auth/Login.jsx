@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, ArrowRight, Info, User, Bus, ShieldCheck, Activity, Radio, MapPin } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Info, User, Bus, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import SmartTransitLogo from '../../components/SmartTransitLogo';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 
@@ -24,187 +23,156 @@ export default function Login() {
   };
 
   const demoAccounts = [
-    { label: 'Passenger', email: 'passenger@transit.dev', icon: User, desc: 'Public tracking & ETAs' },
-    { label: 'Driver', email: 'driver@transit.dev', icon: Bus, desc: 'GPS & trip stream' },
-    { label: 'Admin', email: 'admin@transit.dev', icon: ShieldCheck, desc: 'Fleet control center' },
+    { label: 'Passenger', email: 'passenger@transit.dev', icon: User, desc: 'Public tracking &\nETAs' },
+    { label: 'Driver', email: 'driver@transit.dev', icon: Bus, desc: 'GPS & trip\nstream' },
+    { label: 'Admin', email: 'admin@transit.dev', icon: ShieldCheck, desc: 'Fleet control\ncenter' },
   ];
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center p-4 sm:p-6 md:p-8">
-      <div className="w-full max-w-5xl my-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center animate-slide-up">
-        
-        {/* Left Enterprise Mobility Graphic Panel (Desktop) */}
-        <div className="hidden lg:flex lg:col-span-6 flex-col justify-between p-8 bg-slate-900 rounded-3xl text-white shadow-2xl relative overflow-hidden border border-slate-800 min-h-[540px]">
-          {/* Background ambient lighting */}
-          <div className="absolute -top-24 -right-24 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-emerald-600/15 rounded-full blur-3xl" />
-
-          {/* Top Brand Tagline */}
-          <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold tracking-wider uppercase mb-6">
-              <Activity size={14} className="animate-pulse" />
-              Real-Time Transport Platform
-            </div>
-            <h2 className="text-3xl font-extrabold tracking-tight text-white leading-tight">
-              Next-Generation Public Transit Management
-            </h2>
-            <p className="text-slate-400 text-sm mt-3 leading-relaxed">
-              Empowering small cities with real-time bus tracking, automated ETA calculations, driver telemetry, and fleet operations control.
-            </p>
-          </div>
-
-          {/* Mid Metric Preview Box */}
-          <div className="relative z-10 grid grid-cols-3 gap-3 my-6 p-4 rounded-2xl bg-slate-800/60 border border-slate-700/60 backdrop-blur-md">
-            <div className="text-left">
-              <div className="flex items-center gap-1 text-emerald-400 text-xs font-bold">
-                <Radio size={12} className="animate-pulse" /> Live
-              </div>
-              <p className="text-xl font-extrabold text-white mt-1">100%</p>
-              <p className="text-[10px] text-slate-400 font-semibold uppercase">SSE Realtime</p>
-            </div>
-            <div className="text-left border-l border-slate-700/60 pl-3">
-              <div className="flex items-center gap-1 text-blue-400 text-xs font-bold">
-                <MapPin size={12} /> Routes
-              </div>
-              <p className="text-xl font-extrabold text-white mt-1">Indore</p>
-              <p className="text-[10px] text-slate-400 font-semibold uppercase">Smart City</p>
-            </div>
-            <div className="text-left border-l border-slate-700/60 pl-3">
-              <div className="flex items-center gap-1 text-amber-400 text-xs font-bold">
-                <Bus size={12} /> Fleet
-              </div>
-              <p className="text-xl font-extrabold text-white mt-1">Solarch</p>
-              <p className="text-[10px] text-slate-400 font-semibold uppercase">BaaS Engine</p>
-            </div>
-          </div>
-
-          {/* Bottom Footer Note */}
-          <div className="relative z-10 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>Powered by Solarch TypeScript BaaS</span>
-            <span className="text-slate-500 font-mono">v1.0.0</span>
-          </div>
+    <div className="min-h-screen w-full bg-[#f8fafc] flex flex-col font-sans">
+      {/* Top Navbar for Login Screen */}
+      <div className="h-[60px] bg-white border-b border-slate-200 flex items-center px-4 sm:px-6">
+        <div className="flex items-center gap-2">
+          <Bus size={22} className="text-[#0047b3]" strokeWidth={2.5} />
+          <span className="text-lg font-bold text-[#0047b3] tracking-wide">SMART TRANSIT</span>
         </div>
+      </div>
 
-        {/* Right Authentication Card */}
-        <div className="lg:col-span-6 w-full">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/80 text-slate-900">
-            {/* Logo Header */}
-            <div className="flex justify-center mb-6">
-              <div className="bg-blue-50 px-5 py-3 rounded-2xl border border-blue-100/80">
-                <SmartTransitLogo layout="horizontal" className="h-9" />
-              </div>
+      {/* Main Content Centered */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-[440px] bg-white rounded-[24px] p-6 sm:p-8 shadow-sm border border-slate-200">
+          
+          {/* Header Section */}
+          <div className="flex flex-col items-center text-center">
+            <div className="w-[60px] h-[60px] rounded-[16px] bg-[#0047b3] flex items-center justify-center shadow-md mb-4">
+              <Bus size={32} color="white" strokeWidth={2} />
             </div>
-
-            <h1 className="text-2xl font-extrabold text-slate-900 text-center tracking-tight mb-2">
-              Sign In to Platform
+            <h1 className="text-[22px] font-bold text-[#0047b3] tracking-wide mb-3">
+              SMART TRANSIT
             </h1>
-            <p className="text-xs font-medium text-slate-500 text-center mb-6">
+            <h2 className="text-[22px] font-semibold text-slate-900 mb-2">
+              Sign In to Platform
+            </h2>
+            <p className="text-[15px] text-slate-500 font-medium leading-snug max-w-[320px]">
               Select your role or enter credentials to access your portal
             </p>
+          </div>
 
-            {error && (
-              <div className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold text-center">
-                {error}
-              </div>
-            )}
+          <div className="w-full h-px bg-slate-100 my-6" />
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Email Input */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600" htmlFor="email">
-                  Email Address
-                </label>
-                <Input
+          {error && (
+            <div className="mb-6 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm font-semibold text-center">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email Input */}
+            <div className="space-y-2">
+              <label className="block text-[12px] font-semibold tracking-[0.1em] uppercase text-slate-600" htmlFor="email">
+                Email Address
+              </label>
+              <div className="relative">
+                <div className="absolute left-[14px] top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  <Mail size={20} strokeWidth={1.5} />
+                </div>
+                <input
                   id="email"
                   type="email"
-                  icon={Mail}
-                  placeholder="name@company.com"
+                  placeholder="driver@transit.dev"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="w-full h-[48px] bg-[#f8fafc] border border-slate-300 rounded-[12px] pl-[44px] pr-4 text-[15px] text-slate-900 placeholder:text-slate-400 outline-none focus:border-[#0047b3] focus:ring-1 focus:ring-[#0047b3] transition-all"
                 />
               </div>
+            </div>
 
-              {/* Password Input */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600" htmlFor="password">
-                    Password
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => alert('Demo Password for testing is: 123456')}
-                    className="text-xs font-semibold text-blue-700 hover:underline"
-                  >
-                    Forgot Password?
-                  </button>
+            {/* Password Input */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-[12px] font-semibold tracking-[0.1em] uppercase text-slate-600" htmlFor="password">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => alert('Demo Password for testing is: 123456')}
+                  className="text-[13px] font-medium text-[#0047b3] hover:underline"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+              <div className="relative">
+                <div className="absolute left-[14px] top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  <Lock size={20} strokeWidth={1.5} />
                 </div>
-                <Input
+                <input
                   id="password"
                   type="password"
-                  icon={Lock}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  className="w-full h-[48px] bg-[#f8fafc] border border-slate-300 rounded-[12px] pl-[44px] pr-4 text-[24px] tracking-widest text-slate-900 placeholder:text-slate-400 placeholder:tracking-normal outline-none focus:border-[#0047b3] focus:ring-1 focus:ring-[#0047b3] transition-all"
                 />
               </div>
-
-              {/* Submit Button */}
-              <div className="pt-2">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="lg"
-                  className="w-full rounded-2xl h-12 text-sm font-extrabold shadow-md shadow-blue-600/20 cursor-pointer"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                      Authenticating...
-                    </>
-                  ) : (
-                    <>
-                      Access Platform <ArrowRight size={18} className="ml-1" />
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
-
-            {/* Quick Role Switcher Buttons */}
-            <div className="mt-6 pt-5 border-t border-slate-100">
-              <p className="text-[11px] font-extrabold tracking-wider text-slate-400 uppercase text-center mb-3">
-                ONE-CLICK DEMO ACCESS
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                {demoAccounts.map((acc) => {
-                  const AccIcon = acc.icon;
-                  return (
-                    <button
-                      key={acc.email}
-                      type="button"
-                      className="p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-slate-700 hover:text-blue-700 flex flex-col items-center justify-center transition-all cursor-pointer group"
-                      onClick={() => { setEmail(acc.email); setPassword('123456'); }}
-                    >
-                      <AccIcon size={18} className="text-slate-500 group-hover:text-blue-700 mb-1" />
-                      <span className="text-xs font-bold">{acc.label}</span>
-                      <span className="text-[10px] text-slate-400 font-medium line-clamp-1">{acc.desc}</span>
-                    </button>
-                  );
-                })}
-              </div>
             </div>
 
-            {/* Footer Note */}
-            <div className="mt-5 flex items-center justify-center gap-1.5 text-xs text-slate-400 font-medium">
-              <Info size={14} />
-              <span>SIH25013 Platform Version</span>
+            {/* Submit Button */}
+            <div className="pt-2">
+              <Button
+                type="submit"
+                className="w-full h-[48px] rounded-[12px] bg-[#0047b3] hover:bg-[#003380] text-white text-[16px] font-semibold transition-colors"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Authenticating...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    Access Platform <ArrowRight size={20} strokeWidth={2} />
+                  </span>
+                )}
+              </Button>
             </div>
+          </form>
+
+          <div className="w-full h-px bg-slate-100 mt-8 mb-6 relative flex items-center justify-center">
+            <span className="absolute bg-white px-4 text-[12px] font-semibold tracking-[0.1em] text-slate-500 uppercase">
+              One-Click Demo Access
+            </span>
           </div>
-        </div>
 
+          {/* Quick Role Switcher Buttons */}
+          <div className="grid grid-cols-3 gap-3">
+            {demoAccounts.map((acc) => {
+              const AccIcon = acc.icon;
+              return (
+                <button
+                  key={acc.email}
+                  type="button"
+                  className="h-[96px] rounded-[12px] bg-white border border-slate-300 hover:border-[#0047b3] hover:bg-blue-50 text-slate-700 hover:text-[#0047b3] flex flex-col items-center justify-center transition-all cursor-pointer group px-1"
+                  onClick={() => { setEmail(acc.email); setPassword('123456'); }}
+                >
+                  <AccIcon size={22} strokeWidth={1.5} className="text-slate-800 group-hover:text-[#0047b3] mb-2" />
+                  <span className="text-[13px] font-bold text-slate-900 mb-1">{acc.label}</span>
+                  <span className="text-[10px] text-slate-500 text-center leading-[1.15] whitespace-pre-line">
+                    {acc.desc}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Footer Note */}
+          <div className="mt-8 flex items-center justify-center gap-2 text-[12px] text-slate-500 font-medium">
+            <Info size={14} />
+            <span>SIH25013 Platform Version</span>
+          </div>
+
+        </div>
       </div>
     </div>
   );
