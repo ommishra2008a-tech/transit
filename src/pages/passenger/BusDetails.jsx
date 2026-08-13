@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, MapPin } from 'lucide-react';
 import { getBusById } from '../../services/bus.service';
 import { getStopsByRoute } from '../../services/route.service';
 import StopList from '../../components/StopList/StopList';
+import Button from '../../components/ui/Button';
+import Badge from '../../components/ui/Badge';
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 
 export default function BusDetails() {
   const { id } = useParams();
@@ -25,7 +29,7 @@ export default function BusDetails() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-lg mx-auto space-y-4">
+      <div className="p-4 md:p-6 max-w-xl mx-auto space-y-4">
         <div className="skeleton h-12 w-full rounded-2xl" />
         <div className="skeleton h-24 w-full rounded-2xl" />
         <div className="skeleton h-64 w-full rounded-2xl" />
@@ -35,10 +39,12 @@ export default function BusDetails() {
 
   if (!bus) {
     return (
-      <div className="p-6 max-w-lg mx-auto text-center">
+      <div className="p-6 max-w-xl mx-auto text-center">
         <p className="text-3xl mb-2">🚫</p>
-        <p className="text-slate-500">Bus not found</p>
-        <button className="btn-navy mt-4" onClick={() => navigate(-1)}>Go Back</button>
+        <p className="text-slate-500 font-semibold">Bus vehicle not found</p>
+        <Button variant="primary" className="mt-4" onClick={() => navigate(-1)}>
+          <ArrowLeft size={16} /> Go Back
+        </Button>
       </div>
     );
   }
@@ -46,56 +52,69 @@ export default function BusDetails() {
   const route = bus.expand?.route_id;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col justify-between pb-24">
-      {/* Top Header Bar */}
-      <div className="bg-[#e2e8f0]/80 backdrop-blur-sm px-4 py-3.5 flex items-center justify-between sticky top-0 z-10 border-b border-slate-200">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 flex items-center justify-center text-[#142d76] hover:bg-slate-300/50 rounded-full transition-colors cursor-pointer"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-        </button>
-        <h1 className="text-lg font-bold text-[#142d76] font-mono tracking-wide">{bus.bus_number}</h1>
-        <div className="w-9" /> {/* Spacer */}
-      </div>
-
-      <div className="p-4 max-w-lg mx-auto w-full space-y-4 animate-slide-up flex-1">
-        {/* Top Route & Status Card */}
-        {route && (
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center justify-between">
-            <div className="font-semibold text-slate-800 text-base md:text-lg flex items-center gap-2">
-              <span>{route.start_location}</span>
-              <span className="text-slate-400">→</span>
-              <span>{route.end_location}</span>
-            </div>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#007a4d] text-white text-xs font-bold uppercase tracking-wider shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-white animate-pulse-dot" />
-              {bus.status === 'RUNNING' ? 'RUNNING' : bus.status}
-            </span>
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 flex flex-col justify-between pb-28">
+      {/* Top Header Card */}
+      <div className="p-4 md:p-6 max-w-xl mx-auto w-full space-y-4 animate-slide-up flex-1">
+        {/* Navigation & Title Header */}
+        <div className="flex items-center justify-between pb-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="rounded-xl border-slate-200 bg-white"
+          >
+            <ArrowLeft size={16} /> Back
+          </Button>
+          <div className="text-right">
+            <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">{bus.bus_number}</h1>
+            <p className="text-xs font-mono font-semibold text-slate-400">{bus.registration_number}</p>
           </div>
+        </div>
+
+        {/* Route Overview Card */}
+        {route && (
+          <Card className="p-5 border-primary-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Route Line</p>
+                <div className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
+                  <span>{route.start_location}</span>
+                  <span className="text-slate-300">→</span>
+                  <span>{route.end_location}</span>
+                </div>
+              </div>
+              <Badge variant={bus.status === 'RUNNING' ? 'running' : 'active'} pulse={bus.status === 'RUNNING'}>
+                {bus.status}
+              </Badge>
+            </div>
+          </Card>
         )}
 
         {/* Stop Sequence Card */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Stop Sequence</h2>
-          <StopList stops={stops} currentStopIndex={0} />
-        </div>
+        <Card>
+          <CardHeader className="border-b border-slate-100 pb-3">
+            <CardTitle className="text-base flex items-center justify-between">
+              <span>Route Stop Sequence</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{stops.length} Stops</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <StopList stops={stops} currentStopIndex={0} />
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Fixed Bottom Track Bus Button Bar */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200/80 z-20 flex justify-center">
-        <button
-          className="btn-navy w-full max-w-lg py-4 text-base shadow-lg cursor-pointer"
+      {/* Fixed Bottom Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-slate-200/80 z-40 flex justify-center shadow-lg">
+        <Button
+          variant="primary"
+          size="lg"
+          className="w-full max-w-xl h-12 text-base font-bold shadow-md shadow-primary-700/20 cursor-pointer"
           onClick={() => navigate(`/passenger/track/${bus.id}`)}
         >
-          <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          Track Bus
-        </button>
+          <MapPin size={20} />
+          Track Bus Live
+        </Button>
       </div>
     </div>
   );

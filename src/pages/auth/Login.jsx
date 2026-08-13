@@ -30,33 +30,33 @@ export default function Login() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md animate-slide-up">
-        {/* Main Card */}
-        <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-200/80">
-          {/* Logo Badge */}
+    <div className="min-h-screen w-full bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 py-10 overflow-y-auto">
+      <div className="w-full max-w-md my-auto animate-slide-up">
+        {/* Main Login Card */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/80">
+          {/* Logo Badge Container */}
           <div className="flex justify-center mb-6">
-            <div className="bg-primary-50 p-4 rounded-2xl border border-primary-100">
+            <div className="bg-primary-50 px-5 py-3 rounded-2xl border border-primary-100/80">
               <SmartTransitLogo layout="horizontal" className="h-9" />
             </div>
           </div>
 
-          {/* Heading */}
-          <h1 className="text-2xl md:text-3xl font-extrabold text-primary-950 text-center tracking-tight mb-8">
+          {/* Title */}
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-primary-950 text-center tracking-tight mb-6 leading-tight">
             Welcome to Smart<br />Transit
           </h1>
 
           {error && (
-            <div className="mb-6 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm font-semibold text-center">
+            <div className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold text-center">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="email">
-                Email
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email Field */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600" htmlFor="email">
+                Email Address
               </label>
               <Input
                 id="email"
@@ -69,15 +69,15 @@ export default function Login() {
               />
             </div>
 
-            {/* Password */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-semibold text-slate-700" htmlFor="password">
+            {/* Password Field */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600" htmlFor="password">
                   Password
                 </label>
                 <button
                   type="button"
-                  onClick={() => alert('For testing, password is: 123456')}
+                  onClick={() => alert('Demo Password is: 123456')}
                   className="text-xs font-semibold text-primary-700 hover:underline"
                 >
                   Forgot Password?
@@ -118,7 +118,7 @@ export default function Login() {
           </form>
 
           {/* Footer Note */}
-          <div className="mt-6 flex items-center justify-center gap-1.5 text-xs text-slate-500 font-medium">
+          <div className="mt-5 flex items-center justify-center gap-1.5 text-xs text-slate-500 font-medium">
             <Info size={14} className="text-slate-400" />
             <span>12-Hour MVP Demo Version</span>
           </div>
