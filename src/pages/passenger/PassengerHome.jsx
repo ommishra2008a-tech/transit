@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
+import { Search, Bus, Route as RouteIcon, MapPin, Compass, Navigation } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getBuses } from '../../services/bus.service';
 import { getRoutes } from '../../services/route.service';
 import BusCard from '../../components/BusCard/BusCard';
 import RouteCard from '../../components/RouteCard/RouteCard';
+import Badge from '../../components/ui/Badge';
+import Input from '../../components/ui/Input';
 
 export default function PassengerHome() {
   const { user } = useAuth();
@@ -11,6 +14,7 @@ export default function PassengerHome() {
   const [routes, setRoutes] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('buses');
 
   useEffect(() => {
     Promise.all([getBuses(), getRoutes()])
@@ -32,83 +36,109 @@ export default function PassengerHome() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-4xl mx-auto space-y-4">
-        {[1, 2, 3].map((i) => <div key={i} className="skeleton h-24 w-full rounded-2xl" />)}
+      <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-4">
+        <div className="skeleton h-28 w-full rounded-3xl" />
+        <div className="skeleton h-12 w-full rounded-2xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-36 rounded-2xl" />)}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-4xl mx-auto pb-24 md:pb-6 space-y-6">
-      {/* Greeting */}
-      <div className="animate-fade-in bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-[#142d76]">
-            Hello, {user?.name || 'Passenger'} 👋
-          </h1>
-          <p className="text-slate-500 text-sm mt-0.5">Track your bus in real time</p>
-        </div>
-        <div className="w-12 h-12 rounded-2xl bg-[#f0f4ff] flex items-center justify-center text-2xl">
-          🚍
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto pb-28 space-y-6">
+      {/* Enterprise Hero Banner */}
+      <div className="animate-fade-in bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold uppercase tracking-wider mb-2.5">
+              <Compass size={14} className="animate-pulse" /> Live Passenger Command
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+              Hello, {user?.name || 'Passenger'} 👋
+            </h1>
+            <p className="text-slate-300 text-sm mt-1">Search active transit lines, view route stops & live map positions.</p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-slate-800/80 border border-slate-700/80 text-center min-w-[90px]">
+              <p className="text-xl font-extrabold text-blue-400">{buses.length}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">Vehicles</p>
+            </div>
+            <div className="p-3 rounded-2xl bg-slate-800/80 border border-slate-700/80 text-center min-w-[90px]">
+              <p className="text-xl font-extrabold text-emerald-400">{routes.length}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">Routes</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative animate-fade-in">
-        <span className="absolute left-3.5 top-3.5 text-slate-400">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </span>
-        <input
-          type="text"
-          className="transit-input"
-          placeholder="Search buses, routes, stops..."
+      {/* Search Bar */}
+      <div className="animate-fade-in space-y-3">
+        <Input
+          icon={Search}
+          placeholder="Search bus number, route name, or city location..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          className="h-12 text-base rounded-2xl bg-white shadow-xs border-slate-200"
         />
+
+        {/* View Switcher Tabs */}
+        <div className="flex items-center gap-2 pt-1">
+          <button
+            type="button"
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'buses'
+                ? 'bg-blue-700 text-white shadow-sm'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            }`}
+            onClick={() => setActiveTab('buses')}
+          >
+            <Bus size={15} /> All Buses ({filteredBuses.length})
+          </button>
+          <button
+            type="button"
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'routes'
+                ? 'bg-blue-700 text-white shadow-sm'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            }`}
+            onClick={() => setActiveTab('routes')}
+          >
+            <RouteIcon size={15} /> City Routes ({routes.length})
+          </button>
+        </div>
       </div>
 
-      {/* Available Buses */}
-      <section className="animate-fade-in">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            Available Buses
-            <span className="px-2.5 py-0.5 rounded-full bg-[#f0f4ff] text-[#142d76] text-xs font-bold">
-              {filteredBuses.length}
-            </span>
-          </h2>
-        </div>
-        {filteredBuses.length === 0 ? (
-          <div className="bg-white rounded-2xl p-8 text-center text-slate-400 border border-slate-100">
-            <p className="text-3xl mb-2">🔍</p>
-            <p>No buses found</p>
-          </div>
-        ) : (
-          <div className="grid gap-3">
-            {filteredBuses.map((bus) => (
-              <BusCard key={bus.id} bus={bus} />
+      {/* Content Grid */}
+      {activeTab === 'buses' ? (
+        <section className="animate-fade-in space-y-3">
+          {filteredBuses.length === 0 ? (
+            <div className="bg-white rounded-3xl p-10 text-center text-slate-400 border border-slate-200/80 shadow-xs">
+              <Navigation size={40} className="mx-auto mb-2 text-slate-300" />
+              <p className="text-slate-700 font-bold">No transit vehicles match search query</p>
+              <p className="text-xs text-slate-400 mt-1">Try searching for "BUS-101" or "Rajwada"</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredBuses.map((bus) => (
+                <BusCard key={bus.id} bus={bus} />
+              ))}
+            </div>
+          )}
+        </section>
+      ) : (
+        <section className="animate-fade-in space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {routes.map((route) => (
+              <RouteCard key={route.id} route={route} />
             ))}
           </div>
-        )}
-      </section>
-
-      {/* Routes */}
-      <section className="animate-fade-in">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            City Routes
-            <span className="px-2.5 py-0.5 rounded-full bg-[#f0f4ff] text-[#142d76] text-xs font-bold">
-              {routes.length}
-            </span>
-          </h2>
-        </div>
-        <div className="grid gap-3">
-          {routes.map((route) => (
-            <RouteCard key={route.id} route={route} />
-          ))}
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }
