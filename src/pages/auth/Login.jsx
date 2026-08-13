@@ -29,42 +29,42 @@ export default function Login() {
 
   return (
     <div className="min-h-dvh min-h-screen w-full bg-[#f8fafc] dark:bg-slate-950 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-      <div className="w-full max-w-md mx-auto my-auto animate-slide-up">
+      <div className="w-full max-w-[420px] mx-auto my-auto animate-slide-up">
         
-        {/* Main Login Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-slate-100">
+        {/* Full Page Centered Login Card */}
+        <div className="bg-white dark:bg-slate-900 rounded-[28px] p-6 sm:p-7 shadow-[0_10px_35px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-slate-100">
           
-          {/* Top Brand Logo */}
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#0047BA] text-white flex items-center justify-center shadow-md shadow-blue-600/20 flex-shrink-0">
-              <Bus size={26} strokeWidth={2.2} />
+          {/* Top Brand Logo Header */}
+          <div className="flex items-center justify-center gap-2.5 mb-3.5">
+            <div className="w-11 h-11 rounded-xl bg-[#0047BA] text-white flex items-center justify-center shadow-md shadow-blue-600/20 flex-shrink-0">
+              <Bus size={24} strokeWidth={2.2} />
             </div>
-            <div className="font-extrabold tracking-tight text-xl sm:text-2xl text-slate-900 dark:text-white flex items-center gap-1.5">
+            <div className="font-extrabold tracking-tight text-xl text-slate-900 dark:text-white flex items-center gap-1.5">
               <span>SMART</span>
               <span>TRANSIT</span>
             </div>
           </div>
 
           {/* Title & Subtitle */}
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white text-center tracking-tight mb-2">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white text-center tracking-tight mb-1.5">
             Sign In to Platform
           </h1>
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 text-center max-w-xs mx-auto mb-6 leading-relaxed">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 text-center max-w-[260px] mx-auto mb-5 leading-relaxed">
             Select your role or enter credentials to access your portal
           </p>
 
-          <div className="border-b border-slate-100 dark:border-slate-800 mb-6" />
+          <div className="border-t border-slate-100 dark:border-slate-800/80 mb-5" />
 
           {error && (
-            <div className="mb-5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 text-xs font-semibold text-center">
+            <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 text-xs font-semibold text-center">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             {/* Email Input */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400" htmlFor="email">
+            <div className="space-y-1">
+              <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400" htmlFor="email">
                 EMAIL ADDRESS
               </label>
               <Input
@@ -75,20 +75,20 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 h-12 text-sm font-mono text-slate-900 dark:text-slate-100 rounded-xl"
+                className="bg-[#f8fafc] dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 h-11 text-xs font-mono text-slate-900 dark:text-slate-100 rounded-xl"
               />
             </div>
 
             {/* Password Input */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400" htmlFor="password">
+                <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400" htmlFor="password">
                   PASSWORD
                 </label>
                 <button
                   type="button"
                   onClick={() => alert('Demo Password for testing is: 123456')}
-                  className="text-xs font-mono font-bold text-[#0047BA] dark:text-blue-400 hover:underline"
+                  className="text-[11px] font-mono font-bold text-[#0047BA] dark:text-blue-400 hover:underline"
                 >
                   Forgot Password?
                 </button>
@@ -101,15 +101,15 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 h-12 text-sm font-mono text-slate-900 dark:text-slate-100 rounded-xl"
+                className="bg-[#f8fafc] dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 h-11 text-xs font-mono text-slate-900 dark:text-slate-100 rounded-xl"
               />
             </div>
 
-            {/* Access Platform Submit Button */}
-            <div className="pt-2">
+            {/* Submit Button */}
+            <div className="pt-1.5">
               <button
                 type="submit"
-                className="w-full h-12 bg-[#0047BA] hover:bg-[#003896] text-white rounded-xl font-extrabold text-sm sm:text-base flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 transition-all cursor-pointer active:scale-[0.99]"
+                className="w-full h-11 bg-[#0047BA] hover:bg-[#0038a8] text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 transition-all cursor-pointer active:scale-[0.99]"
                 disabled={loading}
               >
                 {loading ? (
@@ -119,7 +119,7 @@ export default function Login() {
                   </>
                 ) : (
                   <>
-                    Access Platform <ArrowRight size={18} />
+                    Access Platform <ArrowRight size={17} />
                   </>
                 )}
               </button>
@@ -127,22 +127,22 @@ export default function Login() {
           </form>
 
           {/* Quick Role Switcher Buttons */}
-          <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-            <p className="text-xs font-mono font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase text-center mb-4">
+          <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+            <p className="text-[11px] font-mono font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase text-center mb-3">
               ONE-CLICK DEMO ACCESS
             </p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2.5">
               {demoAccounts.map((acc) => {
                 const AccIcon = acc.icon;
                 return (
                   <button
                     key={acc.email}
                     type="button"
-                    className="p-3 rounded-xl bg-white dark:bg-slate-800/80 hover:bg-blue-50 dark:hover:bg-blue-950/60 border border-slate-200 dark:border-slate-700 hover:border-[#0047BA] dark:hover:border-blue-500 text-slate-800 dark:text-slate-200 flex flex-col items-center justify-center transition-all cursor-pointer group shadow-2xs"
+                    className="p-2.5 rounded-xl bg-white dark:bg-slate-800/80 hover:bg-blue-50/50 dark:hover:bg-blue-950/60 border border-slate-200 dark:border-slate-700 hover:border-[#0047BA] dark:hover:border-blue-500 text-slate-800 dark:text-slate-200 flex flex-col items-center justify-center transition-all cursor-pointer group"
                     onClick={() => { setEmail(acc.email); setPassword('123456'); }}
                   >
-                    <AccIcon size={20} className="text-slate-600 dark:text-slate-400 group-hover:text-[#0047BA] dark:group-hover:text-blue-400 mb-1.5" />
-                    <span className="text-xs font-mono font-bold">{acc.label}</span>
+                    <AccIcon size={18} className="text-slate-600 dark:text-slate-400 group-hover:text-[#0047BA] dark:group-hover:text-blue-400 mb-1" />
+                    <span className="text-[11px] font-mono font-bold">{acc.label}</span>
                   </button>
                 );
               })}
@@ -150,8 +150,8 @@ export default function Login() {
           </div>
 
           {/* Footer Version Note */}
-          <div className="mt-6 flex items-center justify-center gap-1.5 text-xs font-mono text-slate-400 dark:text-slate-500">
-            <Info size={14} />
+          <div className="mt-5 flex items-center justify-center gap-1.5 text-[11px] font-mono text-slate-400 dark:text-slate-500">
+            <Info size={13} />
             <span>SIH25013 Platform Version</span>
           </div>
 
