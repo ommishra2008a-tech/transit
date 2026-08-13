@@ -33,40 +33,54 @@ export default function PassengerHome() {
   if (loading) {
     return (
       <div className="p-6 max-w-4xl mx-auto space-y-4">
-        {[1, 2, 3].map((i) => <div key={i} className="skeleton h-24 w-full" />)}
+        {[1, 2, 3].map((i) => <div key={i} className="skeleton h-24 w-full rounded-2xl" />)}
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-4xl mx-auto pb-24 md:pb-6">
+    <div className="p-4 md:p-6 max-w-4xl mx-auto pb-24 md:pb-6 space-y-6">
       {/* Greeting */}
-      <div className="mb-6 animate-fade-in">
-        <h1 className="text-2xl font-bold text-surface-100">
-          Hello, {user?.name || 'Passenger'} 👋
-        </h1>
-        <p className="text-surface-500">Track your bus in real time</p>
+      <div className="animate-fade-in bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-[#142d76]">
+            Hello, {user?.name || 'Passenger'} 👋
+          </h1>
+          <p className="text-slate-500 text-sm mt-0.5">Track your bus in real time</p>
+        </div>
+        <div className="w-12 h-12 rounded-2xl bg-[#f0f4ff] flex items-center justify-center text-2xl">
+          🚍
+        </div>
       </div>
 
       {/* Search */}
-      <div className="mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
+      <div className="relative animate-fade-in">
+        <span className="absolute left-3.5 top-3.5 text-slate-400">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </span>
         <input
           type="text"
-          className="input"
-          placeholder="Search buses, routes..."
+          className="transit-input"
+          placeholder="Search buses, routes, stops..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
-      {/* Active Buses */}
-      <section className="mb-8 animate-fade-in" style={{ animationDelay: '200ms' }}>
-        <h2 className="text-lg font-semibold text-surface-200 mb-3 flex items-center gap-2">
-          🚌 Available Buses
-          <span className="badge badge-active text-xs">{filteredBuses.length}</span>
-        </h2>
+      {/* Available Buses */}
+      <section className="animate-fade-in">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            Available Buses
+            <span className="px-2.5 py-0.5 rounded-full bg-[#f0f4ff] text-[#142d76] text-xs font-bold">
+              {filteredBuses.length}
+            </span>
+          </h2>
+        </div>
         {filteredBuses.length === 0 ? (
-          <div className="glass-card p-8 text-center text-surface-500">
+          <div className="bg-white rounded-2xl p-8 text-center text-slate-400 border border-slate-100">
             <p className="text-3xl mb-2">🔍</p>
             <p>No buses found</p>
           </div>
@@ -80,11 +94,15 @@ export default function PassengerHome() {
       </section>
 
       {/* Routes */}
-      <section className="animate-fade-in" style={{ animationDelay: '300ms' }}>
-        <h2 className="text-lg font-semibold text-surface-200 mb-3 flex items-center gap-2">
-          🗺️ Routes
-          <span className="badge badge-active text-xs">{routes.length}</span>
-        </h2>
+      <section className="animate-fade-in">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            City Routes
+            <span className="px-2.5 py-0.5 rounded-full bg-[#f0f4ff] text-[#142d76] text-xs font-bold">
+              {routes.length}
+            </span>
+          </h2>
+        </div>
         <div className="grid gap-3">
           {routes.map((route) => (
             <RouteCard key={route.id} route={route} />

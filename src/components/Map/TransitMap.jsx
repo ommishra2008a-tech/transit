@@ -11,40 +11,39 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-// Custom bus icon
+// Custom Blue Bus Icon
 export const busIcon = new L.DivIcon({
-  className: 'bus-marker',
+  className: 'bus-marker-div',
   html: `<div style="
-    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    background: #1d4ed8;
     color: white;
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 18px;
-    border: 3px solid white;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    transition: transform 0.3s ease;
+    border: 3px solid #ffffff;
+    box-shadow: 0 4px 14px rgba(29, 78, 216, 0.4);
   ">🚌</div>`,
-  iconSize: [36, 36],
-  iconAnchor: [18, 18],
+  iconSize: [38, 38],
+  iconAnchor: [19, 19],
 });
 
-// Stop icon
+// Custom Stop Icon
 export const stopIcon = new L.DivIcon({
-  className: 'stop-marker',
+  className: 'stop-marker-div',
   html: `<div style="
-    background: #1e293b;
-    border: 2px solid #6366f1;
-    width: 14px;
-    height: 14px;
+    background: #ffffff;
+    border: 3px solid #1d4ed8;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
-    box-shadow: 0 0 6px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   "></div>`,
-  iconSize: [14, 14],
-  iconAnchor: [7, 7],
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
 });
 
 // Auto-fit map bounds helper
@@ -58,7 +57,6 @@ function FitBounds({ bounds }) {
   return null;
 }
 
-// Default center: Indore
 const INDORE_CENTER = [22.7196, 75.8577];
 
 export default function TransitMap({
@@ -75,7 +73,7 @@ export default function TransitMap({
     <MapContainer
       center={center}
       zoom={zoom}
-      style={{ height, width: '100%', borderRadius: '0.75rem' }}
+      style={{ height, width: '100%', borderRadius: '1rem' }}
       zoomControl={true}
     >
       <TileLayer
@@ -90,22 +88,22 @@ export default function TransitMap({
         <Polyline
           positions={routeLine}
           pathOptions={{
-            color: '#6366f1',
+            color: '#2563eb',
             weight: 4,
-            opacity: 0.7,
-            dashArray: '8 8',
+            opacity: 0.8,
+            dashArray: '6 6',
           }}
         />
       )}
 
       {/* Stop markers */}
       {stopMarkers.map((stop) => (
-        <Marker key={stop.id} position={[stop.latitude, stop.longitude]} icon={stopIcon}>
+        <Marker key={stop.id || stop.stop_name} position={[stop.latitude, stop.longitude]} icon={stopIcon}>
           <Popup>
-            <div style={{ color: '#1e293b', fontFamily: 'Inter, sans-serif' }}>
-              <strong>{stop.stop_name}</strong>
+            <div style={{ color: '#0f172a', fontFamily: 'Inter, sans-serif', padding: '2px' }}>
+              <strong style={{ fontSize: '14px' }}>{stop.stop_name}</strong>
               <br />
-              <small>Stop #{stop.stop_order}</small>
+              <small style={{ color: '#64748b' }}>Stop #{stop.stop_order}</small>
             </div>
           </Popup>
         </Marker>
@@ -115,9 +113,14 @@ export default function TransitMap({
       {busMarkers.map((bus) => (
         <Marker key={bus.id} position={[bus.latitude, bus.longitude]} icon={busIcon}>
           <Popup>
-            <div style={{ color: '#1e293b', fontFamily: 'Inter, sans-serif' }}>
-              <strong>{bus.label || 'Bus'}</strong>
-              {bus.speed !== undefined && <><br /><small>{Math.round(bus.speed)} km/h</small></>}
+            <div style={{ color: '#0f172a', fontFamily: 'Inter, sans-serif', padding: '2px' }}>
+              <strong style={{ fontSize: '14px', color: '#1d4ed8' }}>{bus.label || 'Bus'}</strong>
+              {bus.speed !== undefined && (
+                <>
+                  <br />
+                  <small style={{ color: '#64748b' }}>Speed: {Math.round(bus.speed)} km/h</small>
+                </>
+              )}
             </div>
           </Popup>
         </Marker>

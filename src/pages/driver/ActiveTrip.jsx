@@ -1,16 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Square, CheckCircle, Navigation, Radio, Gauge, Send, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { getActiveTrip, endTrip } from '../../services/trip.service';
 import { getAssignedBus } from '../../services/bus.service';
 import { updateLocation } from '../../services/location.service';
 import { formatSpeed } from '../../utils/geo';
+import Button from '../../components/ui/Button';
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import Badge from '../../components/ui/Badge';
 
 export default function ActiveTrip() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { latitude, longitude, speed, accuracy, error: geoError, isTracking, startTracking, stopTracking } = useGeolocation();
+  const { latitude, longitude, speed, error: geoError, isTracking, startTracking, stopTracking } = useGeolocation();
 
   const [trip, setTrip] = useState(null);
   const [bus, setBus] = useState(null);
@@ -21,7 +25,6 @@ export default function ActiveTrip() {
   const [updateCount, setUpdateCount] = useState(0);
   const intervalRef = useRef(null);
 
-  // Load trip data
   useEffect(() => {
     async function load() {
       try {
@@ -30,7 +33,6 @@ export default function ActiveTrip() {
         setTrip(t);
         const b = await getAssignedBus(user.id);
         setBus(b);
-        // Start GPS tracking
         startTracking();
       } catch (e) {
         console.error(e);
@@ -42,7 +44,6 @@ export default function ActiveTrip() {
     load();
   }, [user, navigate, startTracking]);
 
-  // Send location updates every 5 seconds
   const sendLocation = useCallback(async () => {
     if (!latitude || !longitude || !trip || !bus) return;
     try {
@@ -55,9 +56,7 @@ export default function ActiveTrip() {
 
   useEffect(() => {
     if (isTracking && latitude && trip) {
-      // Send immediately
       sendLocation();
-      // Then every 5 seconds
       intervalRef.current = setInterval(sendLocation, 5000);
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
@@ -83,111 +82,133 @@ export default function ActiveTrip() {
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-[60vh]">
-        <div className="w-8 h-8 border-3 border-primary-400/30 border-t-primary-400 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-primary-600/30 border-t-primary-600 rounded-full animate-spin" />
       </div>
     );
   }
 
-  // Trip Completed State
   if (completed) {
     return (
       <div className="p-4 md:p-6 max-w-2xl mx-auto pb-24 md:pb-6">
-        <div className="glass-card p-8 text-center animate-slide-up">
-          <div className="text-5xl mb-4">✅</div>
-          <h1 className="text-2xl font-bold text-success-400 mb-2">Trip Completed</h1>
-          <p className="text-surface-400 mb-6">Your trip has been recorded successfully</p>
+        <Card className="p-8 text-center animate-slide-up border-emerald-200 bg-emerald-50/30">
+          <CheckCircle size={56} className="text-emerald-600 mx-auto mb-4" />
+          <h1 className="text-2xl font-extrabold text-slate-900 mb-1">Trip Completed ✓</h1>
+          <p className="text-slate-500 text-sm mb-6">Your trip has been recorded successfully</p>
 
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="p-3 rounded-lg bg-surface-800/50">
-              <p className="text-xs text-surface-500">Start Time</p>
-              <p className="text-sm font-semibold text-surface-200">
+          <div className="grid grid-cols-2 gap-3 mb-6 text-left">
+            <div className="p-3.5 rounded-xl bg-white border border-slate-200">
+              <p className="text-xs font-semibold text-slate-400">Start Time</p>
+              <p className="text-sm font-bold text-slate-800 mt-0.5">
                 {new Date(trip.start_time).toLocaleTimeString()}
               </p>
             </div>
-            <div className="p-3 rounded-lg bg-surface-800/50">
-              <p className="text-xs text-surface-500">End Time</p>
-              <p className="text-sm font-semibold text-surface-200">
+            <div className="p-3.5 rounded-xl bg-white border border-slate-200">
+              <p className="text-xs font-semibold text-slate-400">End Time</p>
+              <p className="text-sm font-bold text-slate-800 mt-0.5">
                 {completedTrip?.end_time ? new Date(completedTrip.end_time).toLocaleTimeString() : '--'}
               </p>
             </div>
-            <div className="p-3 rounded-lg bg-surface-800/50">
-              <p className="text-xs text-surface-500">Location Updates</p>
-              <p className="text-sm font-semibold text-surface-200">{updateCount}</p>
+            <div className="p-3.5 rounded-xl bg-white border border-slate-200">
+              <p className="text-xs font-semibold text-slate-400">Updates Sent</p>
+              <p className="text-sm font-bold text-primary-700 mt-0.5">{updateCount}</p>
             </div>
-            <div className="p-3 rounded-lg bg-surface-800/50">
-              <p className="text-xs text-surface-500">Bus</p>
-              <p className="text-sm font-semibold text-surface-200">{bus?.bus_number}</p>
+            <div className="p-3.5 rounded-xl bg-white border border-slate-200">
+              <p className="text-xs font-semibold text-slate-400">Bus</p>
+              <p className="text-sm font-bold text-slate-800 mt-0.5">{bus?.bus_number}</p>
             </div>
           </div>
 
-          <button className="btn btn-primary btn-lg w-full" onClick={() => navigate('/driver')}>
-            ← Back to Dashboard
-          </button>
-        </div>
+          <Button
+            variant="primary"
+            size="lg"
+            className="w-full rounded-2xl h-12"
+            onClick={() => navigate('/driver')}
+          >
+            <ArrowLeft size={18} /> Back to Dashboard
+          </Button>
+        </Card>
       </div>
     );
   }
 
-  // Active Trip State
   return (
-    <div className="p-4 md:p-6 max-w-2xl mx-auto pb-24 md:pb-6">
-      {/* Trip Active Header */}
-      <div className="glass-card p-6 mb-4 animate-fade-in border-success-500/30">
-        <div className="flex items-center justify-between mb-4">
+    <div className="p-4 md:p-6 max-w-2xl mx-auto pb-24 md:pb-6 space-y-5">
+      <Card className="animate-fade-in border-emerald-200 overflow-hidden">
+        <CardHeader className="bg-emerald-50/50 border-b border-emerald-100 flex-row items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-surface-100">{bus?.bus_number}</h1>
-            <p className="text-sm text-surface-500">Trip Active</p>
+            <CardTitle className="text-xl">{bus?.bus_number}</CardTitle>
+            <p className="text-xs font-semibold text-slate-500 mt-0.5">Trip Currently Active</p>
           </div>
-          <div className="badge badge-running text-sm px-4 py-1.5">
-            <span className="w-2 h-2 rounded-full bg-success-400 animate-pulse-dot" />
-            TRIP ACTIVE
-          </div>
-        </div>
-
-        {/* GPS Status */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-lg bg-surface-800/50">
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`w-2 h-2 rounded-full ${isTracking && latitude ? 'bg-success-400 animate-pulse-dot' : 'bg-danger-400'}`} />
-              <p className="text-xs text-surface-500">GPS Status</p>
+          <Badge variant="running" pulse>
+            TRIP RUNNING
+          </Badge>
+        </CardHeader>
+        <CardContent className="p-5">
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Radio size={16} className={isTracking && latitude ? 'text-emerald-600 animate-pulse' : 'text-red-500'} />
+                <p className="text-xs font-semibold text-slate-500">GPS Signal</p>
+              </div>
+              <p className="text-sm font-bold text-slate-900">
+                {isTracking && latitude ? 'Active' : geoError ? 'Error' : 'Acquiring...'}
+              </p>
             </div>
-            <p className="text-sm font-semibold text-surface-200">
-              {isTracking && latitude ? 'Tracking' : geoError ? 'Error' : 'Connecting...'}
-            </p>
-          </div>
-          <div className="p-3 rounded-lg bg-surface-800/50">
-            <p className="text-xs text-surface-500 mb-1">Speed</p>
-            <p className="text-sm font-semibold text-surface-200">{formatSpeed(speed)}</p>
-          </div>
-          <div className="p-3 rounded-lg bg-surface-800/50">
-            <p className="text-xs text-surface-500 mb-1">Position</p>
-            <p className="text-xs font-mono text-surface-300">
-              {latitude ? `${latitude.toFixed(5)}, ${longitude.toFixed(5)}` : '--'}
-            </p>
-          </div>
-          <div className="p-3 rounded-lg bg-surface-800/50">
-            <p className="text-xs text-surface-500 mb-1">Updates Sent</p>
-            <p className="text-sm font-semibold text-primary-400">{updateCount}</p>
-          </div>
-        </div>
 
-        {geoError && (
-          <div className="mt-3 p-2 rounded-lg bg-danger-500/10 border border-danger-500/30 text-danger-400 text-xs">
-            GPS Error: {geoError}
-          </div>
-        )}
-      </div>
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Gauge size={16} className="text-primary-600" />
+                <p className="text-xs font-semibold text-slate-500">Speed</p>
+              </div>
+              <p className="text-sm font-bold text-slate-900">{formatSpeed(speed)}</p>
+            </div>
 
-      {/* End Trip Button */}
-      <button
-        className="btn btn-danger btn-lg w-full"
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Navigation size={16} className="text-primary-600" />
+                <p className="text-xs font-semibold text-slate-500">Position</p>
+              </div>
+              <p className="text-xs font-mono font-bold text-slate-800">
+                {latitude ? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` : '--'}
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Send size={16} className="text-primary-600" />
+                <p className="text-xs font-semibold text-slate-500">Updates Sent</p>
+              </div>
+              <p className="text-sm font-bold text-primary-700">{updateCount}</p>
+            </div>
+          </div>
+
+          {geoError && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold">
+              GPS Signal Warning: {geoError}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Button
+        variant="danger"
+        size="lg"
+        className="w-full rounded-2xl h-14 text-base font-extrabold shadow-lg shadow-red-600/20 cursor-pointer"
         onClick={handleEndTrip}
         disabled={ending}
       >
         {ending ? (
-          <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Ending...</>
-        ) : '⏹ END TRIP'}
-      </button>
+          <>
+            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+            Ending Trip...
+          </>
+        ) : (
+          <>
+            <Square size={20} className="fill-current" />
+            END TRIP
+          </>
+        )}
+      </Button>
     </div>
   );
 }

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { Route as RouteIcon, ChevronDown, ChevronUp } from 'lucide-react';
 import { getRoutes, getStopsByRoute } from '../../services/route.service';
 import StatusBadge from '../../components/StatusBadge/StatusBadge';
 import StopList from '../../components/StopList/StopList';
+import { Card } from '../../components/ui/Card';
 
 export default function Routes() {
   const [routes, setRoutes] = useState([]);
@@ -30,50 +32,63 @@ export default function Routes() {
   if (loading) {
     return (
       <div className="p-6 max-w-4xl mx-auto space-y-3">
-        {[1, 2, 3].map((i) => <div key={i} className="skeleton h-20" />)}
+        {[1, 2, 3].map((i) => <div key={i} className="skeleton h-20 rounded-2xl" />)}
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-4xl mx-auto pb-24 md:pb-6">
-      <div className="mb-6 animate-fade-in">
-        <h1 className="text-2xl font-bold text-surface-100">Route Management 🗺️</h1>
-        <p className="text-surface-500">{routes.length} routes configured</p>
+    <div className="p-4 md:p-6 max-w-4xl mx-auto pb-24 md:pb-6 space-y-6">
+      <div className="animate-fade-in bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-primary-950">Route & Stop Manager 🗺️</h1>
+          <p className="text-slate-500 text-sm mt-0.5">{routes.length} configured city routes</p>
+        </div>
       </div>
 
       <div className="space-y-3">
-        {routes.map((route, idx) => (
-          <div key={route.id} className="animate-fade-in" style={{ animationDelay: `${idx * 80}ms` }}>
-            <div
-              className={`glass-card p-4 cursor-pointer transition-all ${selectedRoute?.id === route.id ? 'border-primary-500/50' : ''}`}
-              onClick={() => handleSelectRoute(route)}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-surface-100">{route.route_name}</h3>
-                <div className="flex items-center gap-2">
-                  <StatusBadge status={route.status} />
-                  <span className="text-surface-500 text-sm">{selectedRoute?.id === route.id ? '▲' : '▼'}</span>
+        {routes.map((route, idx) => {
+          const isExpanded = selectedRoute?.id === route.id;
+          return (
+            <div key={route.id} className="animate-fade-in" style={{ animationDelay: `${idx * 60}ms` }}>
+              <Card
+                hover
+                className={`p-5 cursor-pointer transition-all ${isExpanded ? 'border-primary-400 ring-2 ring-primary-500/10' : ''}`}
+                onClick={() => handleSelectRoute(route)}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-700 flex items-center justify-center font-bold">
+                      <RouteIcon size={20} />
+                    </div>
+                    <h3 className="font-bold text-slate-900 text-base">{route.route_name}</h3>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <StatusBadge status={route.status} />
+                    <span className="text-slate-400">
+                      {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-surface-400">
-                <span className="w-2 h-2 rounded-full bg-success-400" />
-                {route.start_location}
-                <span className="text-surface-600">→</span>
-                <span className="w-2 h-2 rounded-full bg-danger-400" />
-                {route.end_location}
-              </div>
-            </div>
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 pl-13">
+                  <span>{route.start_location}</span>
+                  <span className="text-slate-300">→</span>
+                  <span>{route.end_location}</span>
+                </div>
+              </Card>
 
-            {/* Stops Dropdown */}
-            {selectedRoute?.id === route.id && (
-              <div className="ml-4 mt-2 p-4 glass-card animate-slide-up">
-                <h4 className="text-sm font-medium text-surface-400 mb-3">STOPS ({stops.length})</h4>
-                <StopList stops={stops} />
-              </div>
-            )}
-          </div>
-        ))}
+              {/* Stop Sequence Dropdown */}
+              {isExpanded && (
+                <Card className="ml-6 mt-2 p-5 animate-slide-up border-primary-200 bg-slate-50/50">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">
+                    STOP SEQUENCE ({stops.length} STOPS)
+                  </h4>
+                  <StopList stops={stops} />
+                </Card>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
