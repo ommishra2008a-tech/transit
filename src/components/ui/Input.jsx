@@ -5,7 +5,7 @@ const Input = forwardRef(({ className, icon: Icon, error, type = 'text', ...prop
   return (
     <div className="relative w-full">
       {Icon && (
-        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10">
           <Icon size={18} strokeWidth={2} />
         </div>
       )}
@@ -13,10 +13,10 @@ const Input = forwardRef(({ className, icon: Icon, error, type = 'text', ...prop
         type={type}
         ref={ref}
         className={cn(
-          'w-full h-11 px-3.5 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400',
-          'transition-all duration-150 outline-none',
+          'w-full h-11 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400',
+          'transition-all duration-150 outline-none pr-3.5',
+          Icon ? 'pl-10.5' : 'pl-3.5',
           'focus:bg-white focus:border-primary-600 focus:ring-4 focus:ring-primary-600/10',
-          Icon && 'pl-10',
           error && 'border-red-500 focus:border-red-500 focus:ring-red-500/10',
           className
         )}
