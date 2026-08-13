@@ -24,8 +24,8 @@ export default function Buses() {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto pb-24 md:pb-6 space-y-6">
-      <div className="animate-fade-in bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
+    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+      <div className="animate-fade-in bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-primary-950">Bus Fleet Management 🚌</h1>
           <p className="text-slate-500 text-sm mt-0.5">{buses.length} registered bus vehicles</p>

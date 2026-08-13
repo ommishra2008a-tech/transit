@@ -52,10 +52,10 @@ export default function LiveMap() {
   const allPoints = busMarkers.map((m) => [m.latitude, m.longitude]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
+    <div className="flex flex-col h-[calc(100dvh-4rem)]">
       {/* Header */}
       <div className="p-4 bg-white border-b border-slate-200 shadow-xs z-10">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               Live Fleet Map

@@ -28,7 +28,7 @@ function AppLayout({ children }) {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {isAuth && !isLoginPage && <Navbar />}
-      <main className="flex-1 flex flex-col">{children}</main>
+      <main className="flex-1 flex flex-col pb-[60px] md:pb-0">{children}</main>
     </div>
   );
 }

@@ -38,9 +38,9 @@ export default function Navbar() {
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-xs transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         {/* Brand Logo & Platform Subtitle */}
-        <div className="flex items-center gap-4 sm:gap-6">
-          <Link to="/" className="flex items-center hover:opacity-95 transition-opacity">
-            <SmartTransitLogo layout="horizontal" className="h-8" />
+        <div className="flex items-center gap-4 sm:gap-6 flex-shrink-0">
+          <Link to="/" className="flex items-center hover:opacity-95 transition-opacity flex-shrink-0">
+            <SmartTransitLogo layout="horizontal" className="h-9" />
           </Link>
 
           {/* Realtime Live Status Ticker */}

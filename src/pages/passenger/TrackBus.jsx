@@ -63,10 +63,10 @@ export default function TrackBus() {
   ];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-50">
+    <div className="flex flex-col h-[calc(100dvh-4rem)] bg-slate-50">
       {/* Top Header Control Panel */}
       <div className="p-4 bg-white border-b border-slate-200 shadow-xs z-10">
-        <div className="max-w-5xl mx-auto space-y-3">
+        <div className="max-w-7xl mx-auto space-y-3">
           <div className="flex items-center justify-between">
             <Button
               variant="outline"

@@ -52,7 +52,7 @@ export default function BusDetails() {
   const route = bus.expand?.route_id;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 flex flex-col justify-between pb-28">
+    <div className="min-h-[calc(100dvh-4rem)] bg-slate-50 flex flex-col justify-between">
       {/* Top Header Card */}
       <div className="p-4 md:p-6 max-w-xl mx-auto w-full space-y-4 animate-slide-up flex-1">
         {/* Navigation & Title Header */}
@@ -104,12 +104,12 @@ export default function BusDetails() {
         </Card>
       </div>
 
-      {/* Fixed Bottom Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-slate-200/80 z-40 flex justify-center shadow-lg">
+      {/* Sticky Bottom Action Bar */}
+      <div className="sticky bottom-0 mt-auto p-4 bg-white/95 backdrop-blur-md border-t border-slate-200/80 z-40 flex justify-center shadow-[0_-10px_20px_rgba(0,0,0,0.03)] w-full">
         <Button
           variant="primary"
           size="lg"
-          className="w-full max-w-xl h-12 text-base font-bold shadow-md shadow-primary-700/20 cursor-pointer"
+          className="w-full max-w-xl h-14 text-base font-bold shadow-md shadow-primary-700/20 cursor-pointer rounded-2xl"
           onClick={() => navigate(`/passenger/track/${bus.id}`)}
         >
           <MapPin size={20} />

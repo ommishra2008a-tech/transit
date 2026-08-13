@@ -47,7 +47,7 @@ export default function PassengerHome() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-5xl mx-auto pb-28 space-y-6">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
       {/* Enterprise Hero Banner */}
       <div className="animate-fade-in bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -123,7 +123,7 @@ export default function PassengerHome() {
               <p className="text-xs text-slate-400 mt-1">Try searching for "BUS-101" or "Rajwada"</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredBuses.map((bus) => (
                 <BusCard key={bus.id} bus={bus} />
               ))}
@@ -132,7 +132,7 @@ export default function PassengerHome() {
         </section>
       ) : (
         <section className="animate-fade-in space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {routes.map((route) => (
               <RouteCard key={route.id} route={route} />
             ))}

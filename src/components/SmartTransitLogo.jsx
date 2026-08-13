@@ -19,16 +19,13 @@ export default function SmartTransitLogo({ className = '', layout = 'horizontal'
   }
 
   return (
-    <div className={`flex items-center gap-3 select-none ${className}`}>
-      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white flex items-center justify-center shadow-md shadow-blue-600/20 flex-shrink-0 border border-blue-500/30">
+    <div className={`flex items-center gap-2.5 select-none whitespace-nowrap flex-shrink-0 ${className}`}>
+      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white flex items-center justify-center shadow-md shadow-blue-600/20 flex-shrink-0 border border-blue-500/30">
         <Bus size={iconSize} strokeWidth={2.2} />
       </div>
-      <div className="font-extrabold tracking-wider leading-none">
-        <div className="flex items-center gap-1">
-          <span className="text-base text-blue-700 font-mono">SMART</span>
-          <Route size={12} className="text-blue-500" />
-        </div>
-        <span className="text-base text-slate-900 block font-mono mt-0.5">TRANSIT</span>
+      <div className="font-extrabold tracking-wider leading-none flex items-center gap-1.5">
+        <span className="text-[17px] text-blue-700 font-mono">SMART</span>
+        <span className="text-[17px] text-slate-900 font-mono">TRANSIT</span>
       </div>
     </div>
   );

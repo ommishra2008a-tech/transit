@@ -31,7 +31,7 @@ export default function Login() {
 
   return (
     <div className="min-h-[100dvh] w-full bg-slate-50 flex flex-col p-4 sm:p-6 md:p-8 overflow-y-auto">
-      <div className="w-full max-w-5xl mx-auto my-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center py-4 sm:py-8 animate-slide-up">
+      <div className="w-full max-w-5xl mx-auto mt-4 sm:mt-auto mb-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center py-4 sm:py-8 animate-slide-up">
         
         {/* Left Enterprise Mobility Graphic Panel (Desktop) */}
         <div className="hidden lg:flex lg:col-span-6 flex-col justify-between p-8 bg-slate-900 rounded-3xl text-white shadow-2xl relative overflow-hidden border border-slate-800 min-h-[540px]">

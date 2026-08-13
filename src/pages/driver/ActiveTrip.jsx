@@ -89,7 +89,7 @@ export default function ActiveTrip() {
 
   if (completed) {
     return (
-      <div className="p-4 md:p-6 max-w-2xl mx-auto pb-24 md:pb-6">
+      <div className="p-4 md:p-6 max-w-2xl mx-auto">
         <Card className="p-8 text-center animate-slide-up border-emerald-200 bg-emerald-50/30">
           <CheckCircle size={56} className="text-emerald-600 mx-auto mb-4" />
           <h1 className="text-2xl font-extrabold text-slate-900 mb-1">Trip Completed ✓</h1>
@@ -132,7 +132,7 @@ export default function ActiveTrip() {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-2xl mx-auto pb-24 md:pb-6 space-y-5">
+      <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-5">
       <Card className="animate-fade-in border-emerald-200 overflow-hidden">
         <CardHeader className="bg-emerald-50/50 border-b border-emerald-100 flex-row items-center justify-between">
           <div>
