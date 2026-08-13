@@ -38,11 +38,11 @@ export default function Routes() {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
-      <div className="animate-fade-in bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-6">
+      <div className="animate-fade-in bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-primary-950">Route & Stop Manager 🗺️</h1>
-          <p className="text-slate-500 text-sm mt-0.5">{routes.length} configured city routes</p>
+          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">Route & Stop Manager 🗺️</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">{routes.length} configured city routes</p>
         </div>
       </div>
 
@@ -53,15 +53,17 @@ export default function Routes() {
             <div key={route.id} className="animate-fade-in" style={{ animationDelay: `${idx * 60}ms` }}>
               <Card
                 hover
-                className={`p-5 cursor-pointer transition-all ${isExpanded ? 'border-primary-400 ring-2 ring-primary-500/10' : ''}`}
+                className={`p-5 cursor-pointer transition-all bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 ${
+                  isExpanded ? 'border-blue-500 dark:border-blue-600 ring-2 ring-blue-500/10' : ''
+                }`}
                 onClick={() => handleSelectRoute(route)}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-700 flex items-center justify-center font-bold">
+                    <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400 flex items-center justify-center font-bold border border-blue-100 dark:border-blue-900">
                       <RouteIcon size={20} />
                     </div>
-                    <h3 className="font-bold text-slate-900 text-base">{route.route_name}</h3>
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg">{route.route_name}</h3>
                   </div>
                   <div className="flex items-center gap-3">
                     <StatusBadge status={route.status} />
@@ -70,17 +72,17 @@ export default function Routes() {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 pl-13">
+                <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 pl-14">
                   <span>{route.start_location}</span>
-                  <span className="text-slate-300">→</span>
+                  <span className="text-slate-300 dark:text-slate-600">→</span>
                   <span>{route.end_location}</span>
                 </div>
               </Card>
 
               {/* Stop Sequence Dropdown */}
               {isExpanded && (
-                <Card className="ml-6 mt-2 p-5 animate-slide-up border-primary-200 bg-slate-50/50">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">
+                <Card className="ml-4 sm:ml-6 mt-2 p-5 animate-slide-up border-blue-200 dark:border-blue-900 bg-slate-50/70 dark:bg-slate-900/60">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">
                     STOP SEQUENCE ({stops.length} STOPS)
                   </h4>
                   <StopList stops={stops} />

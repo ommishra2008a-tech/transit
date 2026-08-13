@@ -24,20 +24,20 @@ export default function Buses() {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
-      <div className="animate-fade-in bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
+      <div className="animate-fade-in bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-primary-950">Bus Fleet Management 🚌</h1>
-          <p className="text-slate-500 text-sm mt-0.5">{buses.length} registered bus vehicles</p>
+          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">Bus Fleet Management 🚌</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">{buses.length} registered bus vehicles</p>
         </div>
       </div>
 
       {/* Fleet Table */}
-      <Card className="overflow-hidden animate-fade-in">
+      <Card className="overflow-hidden animate-fade-in bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase font-bold tracking-wider">
+              <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase font-bold tracking-wider">
                 <th className="p-4">Bus Number</th>
                 <th className="p-4">Registration</th>
                 <th className="p-4">Assigned Route</th>
@@ -45,21 +45,21 @@ export default function Buses() {
                 <th className="p-4">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {buses.map((bus) => (
-                <tr key={bus.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="p-4 font-bold text-slate-900 flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-primary-50 text-primary-700 flex items-center justify-center font-bold">
+                <tr key={bus.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                  <td className="p-4 font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400 flex items-center justify-center font-bold">
                       <BusIcon size={16} />
                     </div>
                     {bus.bus_number}
                   </td>
-                  <td className="p-4 font-mono text-xs font-semibold text-slate-500">{bus.registration_number}</td>
-                  <td className="p-4 font-semibold text-slate-700">
-                    {bus.expand?.route_id?.route_name || <span className="text-slate-400 font-normal">Unassigned</span>}
+                  <td className="p-4 font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">{bus.registration_number}</td>
+                  <td className="p-4 font-semibold text-slate-700 dark:text-slate-300">
+                    {bus.expand?.route_id?.route_name || <span className="text-slate-400 dark:text-slate-600 font-normal">Unassigned</span>}
                   </td>
-                  <td className="p-4 font-semibold text-slate-700">
-                    {bus.expand?.driver_id?.name || <span className="text-slate-400 font-normal">Unassigned</span>}
+                  <td className="p-4 font-semibold text-slate-700 dark:text-slate-300">
+                    {bus.expand?.driver_id?.name || <span className="text-slate-400 dark:text-slate-600 font-normal">Unassigned</span>}
                   </td>
                   <td className="p-4">
                     <StatusBadge status={bus.status} />

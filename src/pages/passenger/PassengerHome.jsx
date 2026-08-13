@@ -90,25 +90,25 @@ export default function PassengerHome() {
         <div className="flex items-center gap-2 pt-1">
           <button
             type="button"
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
               activeTab === 'buses'
-                ? 'bg-blue-700 text-white shadow-sm'
-                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
             onClick={() => setActiveTab('buses')}
           >
-            <Bus size={15} /> All Buses ({filteredBuses.length})
+            <Bus size={16} /> All Buses ({filteredBuses.length})
           </button>
           <button
             type="button"
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
               activeTab === 'routes'
-                ? 'bg-blue-700 text-white shadow-sm'
-                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
             onClick={() => setActiveTab('routes')}
           >
-            <RouteIcon size={15} /> City Routes ({routes.length})
+            <RouteIcon size={16} /> City Routes ({routes.length})
           </button>
         </div>
       </div>

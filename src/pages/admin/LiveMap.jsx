@@ -52,16 +52,16 @@ export default function LiveMap() {
   const allPoints = busMarkers.map((m) => [m.latitude, m.longitude]);
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-4rem)]">
+    <div className="flex flex-col h-[calc(100dvh-4rem)] bg-slate-50 dark:bg-slate-950">
       {/* Header */}
-      <div className="p-4 bg-white border-b border-slate-200 shadow-xs z-10">
+      <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xs z-10">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <h1 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               Live Fleet Map
               <Badge variant="running" pulse>REALTIME</Badge>
             </h1>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               {busMarkers.length} bus(es) active and broadcasting live GPS
             </p>
           </div>
@@ -72,23 +72,23 @@ export default function LiveMap() {
       {/* Sidebar + Map */}
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
-        <div className="hidden md:block w-80 border-r border-slate-200 bg-white overflow-y-auto p-4 space-y-3">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">ACTIVE BROADCASTS</p>
+        <div className="hidden md:block w-80 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-y-auto p-4 space-y-3">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">ACTIVE BROADCASTS</p>
           {busMarkers.length === 0 ? (
-            <div className="p-6 text-center text-slate-400 text-xs rounded-xl bg-slate-50 border border-slate-200">
-              <Radio size={24} className="mx-auto mb-2 text-slate-300" />
+            <div className="p-6 text-center text-slate-400 dark:text-slate-500 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+              <Radio size={24} className="mx-auto mb-2 text-slate-300 dark:text-slate-600" />
               No active GPS broadcasts
             </div>
           ) : (
             busMarkers.map((m) => (
-              <div key={m.id} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 hover:border-primary-300 transition-all">
+              <div key={m.id} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 transition-all">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-bold text-slate-900 flex items-center gap-2">
-                    <BusIcon size={16} className="text-primary-700" /> {m.label}
+                  <span className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <BusIcon size={16} className="text-blue-600 dark:text-blue-400" /> {m.label}
                   </span>
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-dot" />
                 </div>
-                <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
                   <span>Speed: {formatSpeed(m.speed)}</span>
                   <span>{timeAgo(locations[m.id]?.timestamp)}</span>
                 </div>
@@ -100,8 +100,8 @@ export default function LiveMap() {
         {/* Map */}
         <div className="flex-1 relative">
           {loading && (
-            <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/70 backdrop-blur-xs">
-              <div className="w-8 h-8 border-3 border-primary-600/30 border-t-primary-600 rounded-full animate-spin" />
+            <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/70 dark:bg-slate-950/70 backdrop-blur-xs">
+              <div className="w-8 h-8 border-3 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
             </div>
           )}
           <TransitMap

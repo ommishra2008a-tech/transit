@@ -23,9 +23,9 @@ export default function SmartTransitLogo({ className = '', layout = 'horizontal'
       <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white flex items-center justify-center shadow-md shadow-blue-600/20 flex-shrink-0 border border-blue-500/30">
         <Bus size={iconSize} strokeWidth={2.2} />
       </div>
-      <div className="font-extrabold tracking-wider leading-none flex items-center gap-1.5">
-        <span className="text-[17px] text-blue-700 font-mono">SMART</span>
-        <span className="text-[17px] text-slate-900 font-mono">TRANSIT</span>
+      <div className="font-extrabold tracking-wider leading-tight flex items-center gap-1.5 py-0.5">
+        <span className="text-[17px] text-blue-600 dark:text-blue-400 font-mono">SMART</span>
+        <span className="text-[17px] text-slate-900 dark:text-white font-mono">TRANSIT</span>
       </div>
     </div>
   );

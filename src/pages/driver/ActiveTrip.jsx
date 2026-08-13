@@ -132,7 +132,7 @@ export default function ActiveTrip() {
   }
 
   return (
-      <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-5">
+    <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-5">
       <Card className="animate-fade-in border-emerald-200 overflow-hidden">
         <CardHeader className="bg-emerald-50/50 border-b border-emerald-100 flex-row items-center justify-between">
           <div>

@@ -52,34 +52,34 @@ export default function BusDetails() {
   const route = bus.expand?.route_id;
 
   return (
-    <div className="min-h-[calc(100dvh-4rem)] bg-slate-50 flex flex-col justify-between">
+    <div className="min-h-[calc(100dvh-4rem)] bg-slate-50 dark:bg-slate-950 flex flex-col justify-between">
       {/* Top Header Card */}
-      <div className="p-4 md:p-6 max-w-xl mx-auto w-full space-y-4 animate-slide-up flex-1">
+      <div className="p-4 sm:p-6 max-w-3xl mx-auto w-full space-y-4 animate-slide-up flex-1">
         {/* Navigation & Title Header */}
         <div className="flex items-center justify-between pb-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => navigate(-1)}
-            className="rounded-xl border-slate-200 bg-white"
+            className="rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200"
           >
             <ArrowLeft size={16} /> Back
           </Button>
           <div className="text-right">
-            <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">{bus.bus_number}</h1>
-            <p className="text-xs font-mono font-semibold text-slate-400">{bus.registration_number}</p>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">{bus.bus_number}</h1>
+            <p className="text-xs font-mono font-semibold text-slate-400 dark:text-slate-500">{bus.registration_number}</p>
           </div>
         </div>
 
         {/* Route Overview Card */}
         {route && (
-          <Card className="p-5 border-primary-200">
+          <Card className="p-5 border-blue-200 dark:border-blue-900 bg-white dark:bg-slate-900">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Route Line</p>
-                <div className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Route Line</p>
+                <div className="font-extrabold text-slate-900 dark:text-white text-lg sm:text-xl flex items-center gap-2">
                   <span>{route.start_location}</span>
-                  <span className="text-slate-300">→</span>
+                  <span className="text-slate-400">→</span>
                   <span>{route.end_location}</span>
                 </div>
               </div>
@@ -91,11 +91,11 @@ export default function BusDetails() {
         )}
 
         {/* Stop Sequence Card */}
-        <Card>
-          <CardHeader className="border-b border-slate-100 pb-3">
-            <CardTitle className="text-base flex items-center justify-between">
-              <span>Route Stop Sequence</span>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{stops.length} Stops</span>
+        <Card className="bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800">
+          <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-3">
+            <CardTitle className="text-base flex items-center justify-between text-slate-900 dark:text-white">
+              <span>Route Stop Sequence Timeline</span>
+              <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{stops.length} Stops</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
@@ -105,11 +105,11 @@ export default function BusDetails() {
       </div>
 
       {/* Sticky Bottom Action Bar */}
-      <div className="sticky bottom-0 mt-auto p-4 bg-white/95 backdrop-blur-md border-t border-slate-200/80 z-40 flex justify-center shadow-[0_-10px_20px_rgba(0,0,0,0.03)] w-full">
+      <div className="sticky bottom-0 mt-auto p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 z-40 flex justify-center shadow-[0_-10px_20px_rgba(0,0,0,0.03)] w-full">
         <Button
           variant="primary"
           size="lg"
-          className="w-full max-w-xl h-14 text-base font-bold shadow-md shadow-primary-700/20 cursor-pointer rounded-2xl"
+          className="w-full max-w-3xl h-14 text-base font-extrabold shadow-lg shadow-blue-600/20 cursor-pointer rounded-2xl"
           onClick={() => navigate(`/passenger/track/${bus.id}`)}
         >
           <MapPin size={20} />

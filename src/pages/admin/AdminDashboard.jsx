@@ -56,13 +56,13 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat, idx) => {
           const Icon = stat.icon;
           return (
             <Card key={stat.label} className={`p-5 animate-fade-in ${stat.bg}`} style={{ animationDelay: `${idx * 60}ms` }}>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{stat.label}</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{stat.label}</span>
                 <Icon size={20} className={stat.color} />
               </div>
               <p className={`text-3xl font-extrabold ${stat.color}`}>{stat.value}</p>

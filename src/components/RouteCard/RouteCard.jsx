@@ -6,30 +6,30 @@ export default function RouteCard({ route, onClick }) {
   return (
     <Card
       hover
-      className="p-5 cursor-pointer group"
+      className="p-5 cursor-pointer group bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800"
       onClick={onClick}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-700 flex items-center justify-center font-bold group-hover:bg-primary-700 group-hover:text-white transition-colors">
+          <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold group-hover:bg-blue-600 group-hover:text-white transition-colors border border-blue-100 dark:border-blue-900">
             <RouteIcon size={20} />
           </div>
-          <h3 className="font-bold text-slate-900 text-base group-hover:text-primary-700 transition-colors">
+          <h3 className="font-extrabold text-slate-900 dark:text-white text-base group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
             {route.route_name}
           </h3>
         </div>
         <StatusBadge status={route.status} />
       </div>
 
-      <div className="flex items-center gap-2 pt-3 border-t border-slate-100 text-xs font-semibold text-slate-600">
-        <span className="flex items-center gap-1 text-slate-700 font-bold">
-          <MapPin size={14} className="text-emerald-600" />
-          {route.start_location}
+      <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 text-xs font-semibold">
+        <span className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200 font-bold">
+          <MapPin size={14} className="text-emerald-500 flex-shrink-0" />
+          <span className="truncate">{route.start_location}</span>
         </span>
-        <ArrowRight size={14} className="text-slate-300 mx-1" />
-        <span className="flex items-center gap-1 text-slate-700 font-bold">
-          <MapPin size={14} className="text-red-500" />
-          {route.end_location}
+        <ArrowRight size={14} className="text-slate-400 mx-1 flex-shrink-0" />
+        <span className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200 font-bold">
+          <MapPin size={14} className="text-red-500 flex-shrink-0" />
+          <span className="truncate">{route.end_location}</span>
         </span>
       </div>
     </Card>

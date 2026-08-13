@@ -90,8 +90,8 @@ export default function Login() {
           <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/80 text-slate-900">
             {/* Logo Header */}
             <div className="flex justify-center mb-6">
-              <div className="bg-blue-50 px-5 py-3 rounded-2xl border border-blue-100/80">
-                <SmartTransitLogo layout="horizontal" className="h-9" />
+              <div className="bg-blue-50 dark:bg-blue-950/60 px-5 py-3 rounded-2xl border border-blue-100 dark:border-blue-900">
+                <SmartTransitLogo layout="horizontal" />
               </div>
             </div>
 

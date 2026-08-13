@@ -40,7 +40,7 @@ export default function Navbar() {
         {/* Brand Logo & Platform Subtitle */}
         <div className="flex items-center gap-4 sm:gap-6 flex-shrink-0">
           <Link to="/" className="flex items-center hover:opacity-95 transition-opacity flex-shrink-0">
-            <SmartTransitLogo layout="horizontal" className="h-9" />
+            <SmartTransitLogo layout="horizontal" />
           </Link>
 
           {/* Realtime Live Status Ticker */}

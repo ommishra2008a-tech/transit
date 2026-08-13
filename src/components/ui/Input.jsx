@@ -13,10 +13,10 @@ const Input = forwardRef(({ className, icon: Icon, error, type = 'text', ...prop
         <input
           type={type}
           ref={ref}
+          style={{ paddingLeft: Icon ? '2.75rem' : undefined, ...props.style }}
           className={cn(
-            'w-full h-11 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500',
-            'transition-all duration-150 outline-none pr-3.5 font-medium',
-            Icon ? 'pl-11' : 'pl-3.5',
+            'w-full h-12 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500',
+            'transition-all duration-150 outline-none font-medium px-4',
             'focus:bg-white dark:focus:bg-slate-950 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10',
             error && 'border-red-500 focus:border-red-500 focus:ring-red-500/10',
             className
