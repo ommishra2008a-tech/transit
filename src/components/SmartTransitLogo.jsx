@@ -1,28 +1,61 @@
-import { Bus, Navigation2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function SmartTransitLogo({ className = '', layout = 'horizontal', iconSize = 20 }) {
+/**
+ * SmartTransit Emblem Logo Component
+ * Matched strictly to the reference design (Screenshot 1 & 2):
+ *  - Stylized S/3 continuous loop emblem in dark teal & vibrant cyan
+ *  - Clean typography: "Smart" in White + "Transit" in Cyan
+ */
+export default function SmartTransitLogo({ className = '', layout = 'horizontal', iconSize = 36 }) {
+  const EmblemMark = ({ size = 36 }) => (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="flex-shrink-0 select-none"
+    >
+      {/* Dark Teal / Blue Base Loop */}
+      <path
+        d="M 65 25 C 45 25, 25 35, 25 55 C 25 72, 42 80, 60 80 C 75 80, 80 68, 75 58 C 70 48, 55 48, 48 52"
+        stroke="#0c345a"
+        strokeWidth="14"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Cyan Overlay Curve */}
+      <path
+        d="M 35 75 C 55 75, 78 68, 78 48 C 78 30, 60 22, 42 22 C 28 22, 22 34, 28 44 C 34 54, 52 54, 60 50"
+        stroke="#00d2ff"
+        strokeWidth="12"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+
   if (layout === 'vertical') {
     return (
       <div className={`flex flex-col items-center justify-center text-center select-none ${className}`}>
+        {/* Dark Logo Card as seen in Screenshot 2 */}
         <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 mb-3 border border-blue-400/30 relative overflow-hidden group"
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-[#0b1322] border border-[#1e2a3f] text-white flex items-center justify-center shadow-2xl shadow-cyan-500/10 mb-4 relative overflow-hidden"
         >
-          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <Bus size={28} strokeWidth={2.2} className="relative z-10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent pointer-events-none" />
+          <EmblemMark size={48} />
         </motion.div>
-        
-        <div className="font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">
-          <span className="text-xl text-blue-600 dark:text-blue-400 font-mono tracking-wider">SMART</span>
-          <span className="text-xl text-slate-900 dark:text-white font-mono tracking-wider ml-1.5">TRANSIT</span>
+
+        <div className="font-extrabold tracking-tight text-3xl sm:text-4xl leading-none flex items-center justify-center gap-0.5">
+          <span className="text-white">Smart</span>
+          <span className="text-[#00d2ff]">Transit</span>
         </div>
-        
-        <div className="mt-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-[10px] font-bold tracking-widest uppercase border border-blue-200/80 dark:border-blue-800 flex items-center gap-1">
-          <Navigation2 size={10} className="text-blue-500 animate-spin" style={{ animationDuration: '6s' }} />
-          <span>MOBILITY PLATFORM</span>
-        </div>
+
+        <p className="mt-2 text-xs font-mono font-medium text-slate-400 tracking-wider">
+          Next-gen cinematic mobility
+        </p>
       </div>
     );
   }
@@ -32,14 +65,14 @@ export default function SmartTransitLogo({ className = '', layout = 'horizontal'
       <motion.div
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white flex items-center justify-center shadow-md shadow-blue-600/25 flex-shrink-0 border border-blue-400/30"
+        className="flex items-center justify-center"
       >
-        <Bus size={iconSize} strokeWidth={2.2} />
+        <EmblemMark size={iconSize} />
       </motion.div>
 
-      <div className="font-extrabold tracking-wider leading-none flex items-center gap-1.5 py-0.5">
-        <span className="text-base sm:text-lg text-blue-600 dark:text-blue-400 font-mono tracking-tight font-extrabold">SMART</span>
-        <span className="text-base sm:text-lg text-slate-900 dark:text-white font-mono tracking-tight font-extrabold">TRANSIT</span>
+      <div className="font-extrabold tracking-tight text-lg sm:text-xl leading-none flex items-center">
+        <span className="text-white dark:text-white">Smart</span>
+        <span className="text-[#00d2ff]">Transit</span>
       </div>
     </div>
   );

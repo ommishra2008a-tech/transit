@@ -7,11 +7,11 @@ export const Card = forwardRef(({ className, children, hover = false, interactiv
     return (
       <motion.div
         ref={ref}
-        whileHover={{ scale: 1.01, y: -2 }}
+        whileHover={{ scale: 1.015, y: -2 }}
         whileTap={{ scale: 0.98 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+        transition={{ type: 'spring', stiffness: 450, damping: 25 }}
         className={cn(
-          'bg-white/95 dark:bg-slate-900/90 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs transition-all text-slate-900 dark:text-slate-100 cursor-pointer hover:border-blue-400/60 dark:hover:border-blue-500/60 hover:shadow-lg hover:shadow-blue-500/5',
+          'glass-card-cinematic rounded-3xl p-5 shadow-xl text-slate-100 cursor-pointer hover:border-cyan-500/50 hover:shadow-cyan-500/10 transition-all',
           className
         )}
         {...props}
@@ -25,8 +25,8 @@ export const Card = forwardRef(({ className, children, hover = false, interactiv
     <div
       ref={ref}
       className={cn(
-        'bg-white/95 dark:bg-slate-900/90 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs transition-all text-slate-900 dark:text-slate-100',
-        hover && 'hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 hover:translate-y-[-1px]',
+        'glass-card-cinematic rounded-3xl p-5 shadow-xl text-slate-100 transition-all',
+        hover && 'hover:shadow-2xl hover:border-cyan-500/40 hover:translate-y-[-1px]',
         className
       )}
       {...props}
@@ -48,7 +48,7 @@ export function CardHeader({ className, children, ...props }) {
 
 export function CardTitle({ className, children, ...props }) {
   return (
-    <h3 className={cn('font-extrabold text-base sm:text-lg leading-tight tracking-tight text-slate-900 dark:text-white', className)} {...props}>
+    <h3 className={cn('font-extrabold text-base sm:text-lg leading-tight tracking-tight text-white', className)} {...props}>
       {children}
     </h3>
   );
@@ -56,7 +56,7 @@ export function CardTitle({ className, children, ...props }) {
 
 export function CardDescription({ className, children, ...props }) {
   return (
-    <p className={cn('text-xs font-medium text-slate-500 dark:text-slate-400', className)} {...props}>
+    <p className={cn('text-xs font-medium text-slate-400', className)} {...props}>
       {children}
     </p>
   );
@@ -72,7 +72,7 @@ export function CardContent({ className, children, ...props }) {
 
 export function CardFooter({ className, children, ...props }) {
   return (
-    <div className={cn('p-4 sm:p-5 pt-0 flex items-center border-t border-slate-100 dark:border-slate-800/80 mt-4', className)} {...props}>
+    <div className={cn('p-4 sm:p-5 pt-0 flex items-center border-t border-[#1e2a3f] mt-4', className)} {...props}>
       {children}
     </div>
   );

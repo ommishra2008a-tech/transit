@@ -5,7 +5,7 @@ import { cn } from '../../lib/utils';
 
 const Button = forwardRef(({
   className,
-  variant = 'default',
+  variant = 'coral',
   size = 'default',
   children,
   type = 'button',
@@ -14,21 +14,22 @@ const Button = forwardRef(({
   ...props
 }, ref) => {
   const variants = {
-    default: 'bg-blue-600 hover:bg-blue-700 text-white border-blue-500/30 shadow-md shadow-blue-600/20 dark:shadow-blue-900/30',
-    primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-blue-500/30 shadow-lg shadow-blue-600/25 dark:shadow-blue-900/40',
-    secondary: 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 border-slate-200 dark:border-slate-700 shadow-2xs',
-    outline: 'bg-transparent text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-blue-50/80 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-800',
-    ghost: 'bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100 border-transparent',
+    coral: 'coral-cta-btn text-white border-transparent font-extrabold uppercase tracking-wider',
+    cyan: 'cyan-cta-btn text-white border-transparent font-extrabold uppercase tracking-wider',
+    default: 'bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-extrabold border-cyan-400/30 shadow-md shadow-cyan-500/20',
+    primary: 'coral-cta-btn text-white border-transparent font-extrabold uppercase tracking-wider',
+    secondary: 'bg-[#131d31] text-slate-200 hover:bg-[#1c2942] border-[#1e2a3f] shadow-xs',
+    outline: 'bg-transparent text-slate-300 border-[#1e2a3f] hover:bg-[#131d31] hover:text-cyan-400 hover:border-cyan-500/40',
+    ghost: 'bg-transparent text-slate-400 hover:bg-[#131d31] hover:text-white border-transparent',
     danger: 'bg-rose-600 hover:bg-rose-700 text-white border-rose-500/30 shadow-md shadow-rose-600/20',
     success: 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500/30 shadow-md shadow-emerald-600/20',
-    link: 'bg-transparent text-blue-600 dark:text-blue-400 hover:underline p-0 border-transparent',
   };
 
   const sizes = {
-    default: 'h-10 px-4 py-2 text-sm rounded-xl',
-    sm: 'h-8 px-3 text-xs rounded-lg',
-    lg: 'h-12 px-6 text-base font-bold rounded-2xl',
-    xl: 'h-14 px-8 text-base font-extrabold rounded-2xl tracking-wide',
+    default: 'h-11 px-5 text-sm rounded-2xl',
+    sm: 'h-8 px-3 text-xs rounded-xl',
+    lg: 'h-12 px-6 text-base font-extrabold rounded-2xl',
+    xl: 'h-14 px-8 text-base font-extrabold rounded-2xl tracking-wider',
     pill: 'h-11 px-6 text-sm font-bold rounded-full',
     icon: 'h-10 w-10 p-0 rounded-xl justify-center',
   };
@@ -38,12 +39,12 @@ const Button = forwardRef(({
       ref={ref}
       type={type}
       disabled={disabled || loading}
-      whileHover={{ scale: disabled || loading ? 1 : 1.01 }}
+      whileHover={{ scale: disabled || loading ? 1 : 1.015 }}
       whileTap={{ scale: disabled || loading ? 1 : 0.97 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      transition={{ type: 'spring', stiffness: 450, damping: 25 }}
       className={cn(
-        'inline-flex items-center justify-center gap-2 font-semibold transition-colors border outline-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none',
-        variants[variant] || variants.default,
+        'inline-flex items-center justify-center gap-2 font-semibold transition-all border outline-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none',
+        variants[variant] || variants.coral,
         sizes[size] || sizes.default,
         className
       )}
@@ -51,7 +52,7 @@ const Button = forwardRef(({
     >
       {loading ? (
         <>
-          <Loader2 size={16} className="animate-spin text-current" />
+          <Loader2 size={18} className="animate-spin text-current" />
           <span>Processing...</span>
         </>
       ) : (
