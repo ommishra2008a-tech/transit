@@ -139,7 +139,7 @@ export default function Login() {
                     key={acc.email}
                     type="button"
                     className="p-2.5 rounded-xl bg-white dark:bg-slate-800/80 hover:bg-blue-50/50 dark:hover:bg-blue-950/60 border border-slate-200 dark:border-slate-700 hover:border-[#0047BA] dark:hover:border-blue-500 text-slate-800 dark:text-slate-200 flex flex-col items-center justify-center transition-all cursor-pointer group"
-                    onClick={() => { setEmail(acc.email); setPassword('123456'); }}
+                    onClick={() => { setEmail(acc.email); setPassword('123456password'); }}
                   >
                     <AccIcon size={18} className="text-slate-600 dark:text-slate-400 group-hover:text-[#0047BA] dark:group-hover:text-blue-400 mb-1" />
                     <span className="text-[11px] font-mono font-bold">{acc.label}</span>

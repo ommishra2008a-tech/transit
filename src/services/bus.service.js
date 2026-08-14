@@ -38,7 +38,12 @@ export async function getAssignedBus(driverId) {
 
 export async function updateBusStatus(busId, status) {
   try {
-    return await sol.collection('buses').update(busId, { status });
+    const existing = await sol.collection('buses').getOne(busId);
+    return await sol.collection('buses').update(busId, {
+      bus_number: existing.bus_number,
+      registration_number: existing.registration_number,
+      status,
+    });
   } catch (e) {
     console.error('Solarch updateBusStatus error:', e.message);
     throw e;

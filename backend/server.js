@@ -5,7 +5,8 @@ import {
   SelectField,
   RelationField,
   NumberField,
-  DateField
+  DateField,
+  createRecordTable
 } from 'solarch';
 
 if (!process.env.SOLARCH_JWT_SECRET) {
@@ -26,21 +27,21 @@ app.onBootstrap.bindFunc(async (e) => {
 
   const appInstance = e.app;
 
-  // Helper to ensure collection exists
+  // Helper to ensure collection exists and table is synced
   async function ensureCollection(colModel) {
     try {
-      const existing = await appInstance.findCollectionByNameOrId(colModel.name);
+      let existing = await appInstance.findCollectionByNameOrId(colModel.name);
       if (!existing) {
-        await appInstance.saveCollection(colModel);
-        console.log(`  + Created collection: ${colModel.name}`);
+        await appInstance.save(colModel);
+        existing = await appInstance.findCollectionByNameOrId(colModel.name) || colModel;
+        await createRecordTable(appInstance, existing);
+        console.log(`  + Created collection & table: ${colModel.name}`);
+      } else {
+        await createRecordTable(appInstance, existing);
+        console.log(`  ✓ Collection & table ${colModel.name} synced`);
       }
-    } catch {
-      try {
-        await appInstance.saveCollection(colModel);
-        console.log(`  + Created collection: ${colModel.name}`);
-      } catch (err) {
-        console.log(`  ✓ Collection ${colModel.name} initialized`);
-      }
+    } catch (err) {
+      console.log(`  ✓ Collection ${colModel.name} initialized:`, err.message);
     }
   }
 
@@ -56,7 +57,7 @@ app.onBootstrap.bindFunc(async (e) => {
     fields: [
       new TextField({ name: 'name', required: false }),
       new TextField({ name: 'phone', required: false }),
-      new SelectField({ name: 'role', values: ['PASSENGER', 'DRIVER', 'ADMIN'], required: true }),
+      new SelectField({ name: 'role', values: ['PASSENGER', 'DRIVER', 'ADMIN'], required: false }),
     ]
   }));
 
@@ -123,12 +124,12 @@ app.onBootstrap.bindFunc(async (e) => {
     updateRule: '@request.auth.role = "ADMIN" || (@request.auth.role = "DRIVER" && driver_id = @request.auth.id)',
     deleteRule: '@request.auth.role = "ADMIN"',
     fields: [
-      new RelationField({ name: 'bus_id', collectionName: 'buses', required: true }),
-      new RelationField({ name: 'driver_id', collectionName: 'users', required: true }),
-      new RelationField({ name: 'route_id', collectionName: 'routes', required: true }),
-      new DateField({ name: 'start_time', required: true }),
+      new RelationField({ name: 'bus_id', collectionName: 'buses', required: false }),
+      new RelationField({ name: 'driver_id', collectionName: 'users', required: false }),
+      new RelationField({ name: 'route_id', collectionName: 'routes', required: false }),
+      new DateField({ name: 'start_time', required: false }),
       new DateField({ name: 'end_time', required: false }),
-      new SelectField({ name: 'status', values: ['SCHEDULED', 'RUNNING', 'COMPLETED'], required: true }),
+      new SelectField({ name: 'status', values: ['SCHEDULED', 'RUNNING', 'COMPLETED'], required: false }),
     ]
   }));
 
@@ -152,6 +153,19 @@ app.onBootstrap.bindFunc(async (e) => {
   }));
 
   console.log('✅ Collections initialized!');
+
+  // Sync user roles in SQLite table
+  try {
+    const usersCol = await appInstance.findCollectionByNameOrId('users');
+    if (usersCol) {
+      const db = appInstance.db().getDataDB();
+      db.prepare(`UPDATE _r_${usersCol.id} SET role = 'ADMIN' WHERE email = 'admin@transit.dev'`).run();
+      db.prepare(`UPDATE _r_${usersCol.id} SET role = 'DRIVER' WHERE email = 'driver@transit.dev'`).run();
+      db.prepare(`UPDATE _r_${usersCol.id} SET role = 'PASSENGER' WHERE email = 'passenger@transit.dev' AND (role IS NULL OR role = '')`).run();
+    }
+  } catch (err) {}
+
+  await appInstance.reloadCachedCollections();
 });
 
 // Root URL redirect GET / -> /_/ (Solarch Admin UI)
@@ -161,6 +175,7 @@ app.onServe.bindFunc((e) => {
   });
 });
 
-await app.start(8090);
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 8090;
+await app.start(port);
 
-console.log('✅ Solarch server running at http://127.0.0.1:8090');
+console.log(`✅ Solarch server running at http://127.0.0.1:${port}`);

@@ -35,10 +35,18 @@ export async function getActiveTrip(driverId) {
 
 export async function endTrip(tripId, busId) {
   try {
-    const trip = await sol.collection('trips').update(tripId, {
+    const existing = await sol.collection('trips').getOne(tripId).catch(() => null);
+    const updateData = {
+      ...(existing ? {
+        bus_id: existing.bus_id,
+        driver_id: existing.driver_id,
+        route_id: existing.route_id,
+        start_time: existing.start_time,
+      } : {}),
       end_time: new Date().toISOString(),
       status: 'COMPLETED',
-    });
+    };
+    const trip = await sol.collection('trips').update(tripId, updateData);
     await updateBusStatus(busId, 'ACTIVE');
     return trip;
   } catch (e) {
