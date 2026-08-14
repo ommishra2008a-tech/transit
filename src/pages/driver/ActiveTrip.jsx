@@ -60,6 +60,24 @@ export default function ActiveTrip() {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [isTracking, latitude, sendLocation, trip]);
 
+  // Screen Wake Lock API for mobile drivers
+  useEffect(() => {
+    let wakeLock = null;
+    async function requestLock() {
+      if ('wakeLock' in navigator && isTracking) {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+        } catch (e) {
+          console.warn('Screen Wake Lock request skipped:', e.message);
+        }
+      }
+    }
+    requestLock();
+    return () => {
+      if (wakeLock) wakeLock.release().catch(() => {});
+    };
+  }, [isTracking]);
+
   async function handleEndTrip() {
     if (!trip || !bus) return;
     setEnding(true);
