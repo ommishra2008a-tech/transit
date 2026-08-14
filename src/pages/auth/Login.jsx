@@ -30,128 +30,121 @@ export default function Login() {
     setShowRoleModal(true);
   };
 
-  const executeLoginForRole = async (roleKey) => {
-    setShowRoleModal(false);
-    const targetAccount = roleAccounts[roleKey];
-    try {
-      const activeRole = await login(targetAccount.email, password);
-      navigate(roleAccounts[activeRole]?.route || targetAccount.route);
-    } catch {
-      // Handled by useAuth
-    }
-  };
+    const executeLoginForRole = async (roleKey) => {
+      setShowRoleModal(false);
+      const targetAccount = roleAccounts[roleKey];
+      try {
+        // Fallback to default password to ensure smooth backend connection during demo clicks
+        const loginPassword = password ? password : '123456password';
+        const activeRole = await login(targetAccount.email, loginPassword);
+        navigate(roleAccounts[activeRole]?.route || targetAccount.route);
+      } catch (err) {
+        console.error('Login failed', err);
+      }
+    };
 
   return (
-    <div className="min-h-dvh min-h-screen w-full bg-[#040a17] text-white flex items-center justify-center p-4 sm:p-6 overflow-y-auto relative cinematic-bg">
-      {/* Ambient Blue & Coral Radial Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-80 h-80 bg-coral-500/10 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="min-h-dvh min-h-screen w-full bg-[#051126] text-white flex items-center justify-center p-4 sm:p-6 overflow-y-auto relative">
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.35, ease: 'easeOut' }}
-        className="w-full max-w-[420px] mx-auto my-auto relative z-10 space-y-5"
+        className="w-full max-w-[460px] mx-auto my-auto relative z-10 space-y-8"
       >
-        {/* Top Logo with Lighting Effect & Bounce */}
+        {/* Top Logo */}
         <div className="flex flex-col items-center justify-center text-center">
           <SmartTransitLogo layout="vertical" />
         </div>
 
-        {/* Feature Overview Card */}
-        <motion.div 
-          whileHover={{ y: -2 }}
-          className="p-4 rounded-2xl bg-[#0a1220]/90 border border-[#1b2a42] text-xs text-slate-300 flex items-center gap-3 shadow-lg backdrop-blur-md"
-        >
-          <div className="w-9 h-9 rounded-xl bg-cyan-950/80 border border-cyan-500/30 text-[#00d2ff] flex items-center justify-center flex-shrink-0 shadow-sm shadow-cyan-500/20">
-            <Sparkles size={18} />
-          </div>
-          <div>
-            <p className="font-extrabold text-white text-xs">Real-Time Public Transit Tracking</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">Live bus telemetry, SSE arrival ETAs, & route navigation.</p>
-          </div>
-        </motion.div>
-
         {/* Login Form Card */}
-        <div className="bg-[#0e1626]/95 border border-[#1e2a3f] rounded-[28px] p-6 sm:p-7 shadow-2xl shadow-black/70 backdrop-blur-xl relative">
+        <div className="bg-[#18191e] border border-[#26282e] rounded-[32px] p-8 sm:p-12 shadow-2xl relative">
           
           {error && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="mb-4 p-3 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-300 text-xs font-semibold text-center"
+              className="mb-6 p-4 rounded-2xl bg-rose-950/60 border border-rose-800/80 text-rose-300 text-sm font-semibold text-center shadow-lg"
             >
               {error}
             </motion.div>
           )}
 
-          <form onSubmit={handleSignInClick} className="space-y-4">
+          <form onSubmit={handleSignInClick} className="space-y-7">
             {/* Email Input */}
-            <div className="space-y-1.5">
-              <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400" htmlFor="email">
+            <div className="space-y-2">
+              <label className="block text-sm sm:text-base font-extrabold uppercase tracking-widest bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 drop-shadow-sm" htmlFor="email">
                 EMAIL ADDRESS
               </label>
-              <Input
-                id="email"
-                type="email"
-                icon={Mail}
-                placeholder="user@smarttransit.dev"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="bg-[#131d31] border-[#1e2a3f] text-white placeholder:text-slate-500 focus:border-[#00d2ff] h-12"
-              />
+              <div className="relative group">
+                <Input
+                  id="email"
+                  type="email"
+                  icon={() => (
+                    <motion.div
+                      whileHover={{ scale: 1.15, rotate: [-5, 5, -5, 0] }}
+                      transition={{ duration: 0.4 }}
+                      className="text-slate-400"
+                    >
+                      <Mail size={18} strokeWidth={2} />
+                    </motion.div>
+                  )}
+                  placeholder="commuter@smarttransit.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="bg-[#2a2720] border-[#383329] text-white text-base placeholder:text-slate-500 focus:border-[#f48a66] h-14 rounded-2xl"
+                />
+              </div>
             </div>
 
             {/* Password Input */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400" htmlFor="password">
+                <label className="block text-[13px] sm:text-sm font-extrabold uppercase tracking-widest bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-500 drop-shadow-sm" htmlFor="password">
                   PASSWORD
                 </label>
                 <button
                   type="button"
                   onClick={() => alert('Demo Passwords: 123456password')}
-                  className="text-[11px] font-mono font-bold text-[#00d2ff] hover:underline"
+                  className="text-sm sm:text-[15px] font-bold text-[#8be2e3] hover:text-white transition-colors"
                 >
                   Forgot?
                 </button>
               </div>
-              <Input
-                id="password"
-                type="password"
-                icon={Lock}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="bg-[#131d31] border-[#1e2a3f] text-white placeholder:text-slate-500 focus:border-[#00d2ff] h-12"
-              />
+                <Input
+                  id="password"
+                  type="password"
+                  icon={Lock}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="bg-[#2a2720] border-[#383329] text-white text-base placeholder:text-slate-500 focus:border-[#f48a66] h-14 rounded-2xl"
+                />
+              </div>
             </div>
 
             {/* Coral Gradient SIGN IN Button */}
-            <div className="pt-2">
+            <div className="pt-4">
               <Button
                 type="submit"
-                variant="coral"
-                size="lg"
                 loading={loading}
-                className="w-full font-extrabold tracking-wider h-12 text-sm uppercase shadow-lg shadow-coral-500/25"
+                className="w-full font-extrabold tracking-widest h-14 text-base bg-gradient-to-r from-[#fc6b45] via-[#ff825c] to-[#fda07c] text-slate-900 border-none shadow-xl shadow-coral-500/20 rounded-2xl hover:from-[#fa5e34] hover:to-[#fc916a]"
               >
-                SIGN IN <ArrowRight size={18} />
+                SIGN IN
               </Button>
             </div>
           </form>
 
           {/* Footer Text */}
-          <div className="mt-5 pt-4 border-t border-[#1e2a3f] text-center text-xs font-medium text-slate-400 flex items-center justify-between">
-            <span>Don't have an account?</span>
+          <div className="mt-10 pt-6 border-t border-[#26282e] text-center text-sm font-medium text-slate-300 flex items-center justify-center gap-2">
+            <span>New to SmartTransit?</span>
             <button
               type="button"
               onClick={() => setShowRoleModal(true)}
-              className="text-[#00d2ff] font-bold hover:underline cursor-pointer flex items-center gap-1"
+              className="text-[#8be2e3] font-extrabold hover:text-white transition-colors text-base"
             >
-              Sign Up <ChevronRight size={14} />
+              Sign Up
             </button>
           </div>
         </div>
@@ -178,11 +171,11 @@ export default function Login() {
               </button>
 
               <div className="text-center pt-2">
-                <div className="w-12 h-12 rounded-2xl bg-cyan-950/80 border border-cyan-500/40 text-[#00d2ff] flex items-center justify-center mx-auto mb-3 shadow-lg shadow-cyan-500/20">
-                  <Sparkles size={24} />
+                <div className="w-14 h-14 rounded-2xl bg-cyan-950/80 border border-cyan-500/40 text-[#00d2ff] flex items-center justify-center mx-auto mb-4 shadow-lg shadow-cyan-500/20">
+                  <Sparkles size={28} />
                 </div>
-                <h3 className="text-xl font-extrabold text-white tracking-tight">Select Access Portal</h3>
-                <p className="text-xs text-slate-400 mt-1">Choose the workspace you want to enter:</p>
+                <h3 className="text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">Select Access Portal</h3>
+                <p className="text-sm text-slate-400 mt-2">Choose the workspace you want to enter:</p>
               </div>
 
               <div className="space-y-2.5 pt-1">
