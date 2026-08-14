@@ -1,11 +1,8 @@
 import sol from '../lib/solarch';
 import { updateBusStatus } from './bus.service';
 
-const activeTripsState = new Map();
-
 export async function startTrip(busId, driverId, routeId) {
   const tripData = {
-    id: `trip_${Date.now()}`,
     bus_id: busId,
     driver_id: driverId,
     route_id: routeId,
@@ -18,10 +15,8 @@ export async function startTrip(busId, driverId, routeId) {
     await updateBusStatus(busId, 'RUNNING');
     return trip;
   } catch (e) {
-    console.warn('Solarch startTrip fallback:', e.message);
-    activeTripsState.set(driverId, tripData);
-    await updateBusStatus(busId, 'RUNNING');
-    return tripData;
+    console.error('Solarch startTrip error:', e.message);
+    throw e;
   }
 }
 
@@ -31,11 +26,11 @@ export async function getActiveTrip(driverId) {
       sol.filter('driver_id = {:driverId} && status = "RUNNING"', { driverId }),
       { expand: 'bus_id,route_id' }
     );
-    if (trip) return trip;
+    return trip || null;
   } catch (e) {
-    console.warn('Solarch getActiveTrip fallback:', e.message);
+    console.error('Solarch getActiveTrip error:', e.message);
+    return null;
   }
-  return activeTripsState.get(driverId) || null;
 }
 
 export async function endTrip(tripId, busId) {
@@ -47,14 +42,8 @@ export async function endTrip(tripId, busId) {
     await updateBusStatus(busId, 'ACTIVE');
     return trip;
   } catch (e) {
-    console.warn('Solarch endTrip fallback:', e.message);
-    const trip = {
-      id: tripId,
-      end_time: new Date().toISOString(),
-      status: 'COMPLETED',
-    };
-    await updateBusStatus(busId, 'ACTIVE');
-    return trip;
+    console.error('Solarch endTrip error:', e.message);
+    throw e;
   }
 }
 
@@ -65,20 +54,22 @@ export async function getActiveTrips() {
       expand: 'bus_id,driver_id,route_id',
       sort: '-start_time',
     });
-    if (trips && trips.length > 0) return trips;
+    return trips || [];
   } catch (e) {
-    console.warn('Solarch getActiveTrips fallback:', e.message);
+    console.error('Solarch getActiveTrips error:', e.message);
+    return [];
   }
-  return Array.from(activeTripsState.values()).filter((t) => t.status === 'RUNNING');
 }
 
 export async function getAllTrips() {
   try {
-    return await sol.collection('trips').getFullList({
+    const trips = await sol.collection('trips').getFullList({
       expand: 'bus_id,driver_id,route_id',
       sort: '-start_time',
     });
+    return trips || [];
   } catch (e) {
-    return Array.from(activeTripsState.values());
+    console.error('Solarch getAllTrips error:', e.message);
+    return [];
   }
 }

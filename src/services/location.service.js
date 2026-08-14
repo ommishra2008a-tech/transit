@@ -1,11 +1,9 @@
 import sol from '../lib/solarch';
 
-const localLocationsCache = new Map();
 const locationListeners = new Set();
 
 export async function updateLocation(busId, tripId, latitude, longitude, speed) {
   const locRecord = {
-    id: `loc_${Date.now()}`,
     bus_id: busId,
     trip_id: tripId,
     latitude,
@@ -14,16 +12,14 @@ export async function updateLocation(busId, tripId, latitude, longitude, speed) 
     timestamp: new Date().toISOString(),
   };
 
-  localLocationsCache.set(busId, locRecord);
-
-  // Broadcast to local listeners (fallback for offline/realtime)
+  // Broadcast to local listeners for immediate UI responsiveness
   locationListeners.forEach((cb) => cb({ action: 'create', record: locRecord }));
 
   try {
     return await sol.collection('live_locations').create(locRecord);
   } catch (e) {
-    console.warn('Solarch updateLocation fallback:', e.message);
-    return locRecord;
+    console.error('Solarch updateLocation error:', e.message);
+    throw e;
   }
 }
 
@@ -33,11 +29,11 @@ export async function getLiveLocation(busId) {
       sol.filter('bus_id = {:busId}', { busId }),
       { sort: '-timestamp' }
     );
-    if (result) return result;
+    return result || null;
   } catch (e) {
-    console.warn('Solarch getLiveLocation fallback:', e.message);
+    console.error('Solarch getLiveLocation error:', e.message);
+    return null;
   }
-  return localLocationsCache.get(busId) || null;
 }
 
 export async function getAllLiveLocations() {
@@ -46,11 +42,11 @@ export async function getAllLiveLocations() {
       sort: '-timestamp',
       expand: 'bus_id,trip_id',
     });
-    if (list && list.length > 0) return list;
+    return list || [];
   } catch (e) {
-    console.warn('Solarch getAllLiveLocations fallback:', e.message);
+    console.error('Solarch getAllLiveLocations error:', e.message);
+    return [];
   }
-  return Array.from(localLocationsCache.values());
 }
 
 export async function subscribeToLocation(busId, callback) {
@@ -62,7 +58,6 @@ export async function subscribeToLocation(busId, callback) {
 
   locationListeners.add(listener);
 
-  // Solarch SSE realtime subscription
   let unsubSolarch = null;
   try {
     unsubSolarch = await sol.collection('live_locations').subscribe('*', (e) => {

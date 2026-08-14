@@ -45,11 +45,11 @@ app.onBootstrap.bindFunc(async (e) => {
   await ensureCollection(new Collection({
     name: 'users',
     type: 'auth',
-    listRule: '',
-    viewRule: '',
+    listRule: '@request.auth.id != ""',
+    viewRule: '@request.auth.id != ""',
     createRule: '',
-    updateRule: '',
-    deleteRule: '',
+    updateRule: 'id = @request.auth.id',
+    deleteRule: '@request.auth.role = "ADMIN"',
     fields: [
       new TextField({ name: 'name', required: false }),
       new TextField({ name: 'phone', required: false }),
@@ -63,9 +63,9 @@ app.onBootstrap.bindFunc(async (e) => {
     type: 'base',
     listRule: '',
     viewRule: '',
-    createRule: '',
-    updateRule: '',
-    deleteRule: '',
+    createRule: '@request.auth.role = "ADMIN"',
+    updateRule: '@request.auth.role = "ADMIN"',
+    deleteRule: '@request.auth.role = "ADMIN"',
     fields: [
       new TextField({ name: 'route_name', required: true }),
       new TextField({ name: 'start_location', required: true }),
@@ -80,9 +80,9 @@ app.onBootstrap.bindFunc(async (e) => {
     type: 'base',
     listRule: '',
     viewRule: '',
-    createRule: '',
-    updateRule: '',
-    deleteRule: '',
+    createRule: '@request.auth.role = "ADMIN"',
+    updateRule: '@request.auth.role = "ADMIN"',
+    deleteRule: '@request.auth.role = "ADMIN"',
     fields: [
       new RelationField({ name: 'route_id', collectionName: 'routes', required: true }),
       new TextField({ name: 'stop_name', required: true }),
@@ -98,9 +98,9 @@ app.onBootstrap.bindFunc(async (e) => {
     type: 'base',
     listRule: '',
     viewRule: '',
-    createRule: '',
+    createRule: '@request.auth.role = "ADMIN"',
     updateRule: '',
-    deleteRule: '',
+    deleteRule: '@request.auth.role = "ADMIN"',
     fields: [
       new TextField({ name: 'bus_number', required: true }),
       new TextField({ name: 'registration_number', required: true }),
@@ -116,9 +116,9 @@ app.onBootstrap.bindFunc(async (e) => {
     type: 'base',
     listRule: '',
     viewRule: '',
-    createRule: '',
-    updateRule: '',
-    deleteRule: '',
+    createRule: '@request.auth.id != ""',
+    updateRule: '@request.auth.id != ""',
+    deleteRule: '@request.auth.role = "ADMIN"',
     fields: [
       new RelationField({ name: 'bus_id', collectionName: 'buses', required: true }),
       new RelationField({ name: 'driver_id', collectionName: 'users', required: true }),
@@ -135,9 +135,9 @@ app.onBootstrap.bindFunc(async (e) => {
     type: 'base',
     listRule: '',
     viewRule: '',
-    createRule: '',
-    updateRule: '',
-    deleteRule: '',
+    createRule: '@request.auth.id != ""',
+    updateRule: '@request.auth.id != ""',
+    deleteRule: '@request.auth.role = "ADMIN"',
     fields: [
       new RelationField({ name: 'bus_id', collectionName: 'buses', required: true }),
       new RelationField({ name: 'trip_id', collectionName: 'trips', required: true }),
@@ -149,6 +149,13 @@ app.onBootstrap.bindFunc(async (e) => {
   }));
 
   console.log('✅ Collections initialized!');
+});
+
+// Root URL redirect GET / -> /_/ (Solarch Admin UI)
+app.onServe.bindFunc((e) => {
+  e.router.get('/', (req, res) => {
+    res.redirect(302, '/_/');
+  });
 });
 
 await app.start(8090);
