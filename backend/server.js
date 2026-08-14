@@ -9,11 +9,14 @@ import {
 } from 'solarch';
 
 if (!process.env.SOLARCH_JWT_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('FATAL SECURITY ERROR: SOLARCH_JWT_SECRET environment variable is missing in production!');
+  }
   process.env.SOLARCH_JWT_SECRET = 'smart-transit-super-secret-jwt-key-2026-sih25013';
 }
 
 const app = new Solarch({
-  defaultDev: true,
+  defaultDev: process.env.NODE_ENV !== 'production',
   defaultDataDir: './sol_data',
 });
 
@@ -41,14 +44,14 @@ app.onBootstrap.bindFunc(async (e) => {
     }
   }
 
-  // 1. users (Auth collection)
+  // 1. users (Auth collection) - Prevent role self-escalation
   await ensureCollection(new Collection({
     name: 'users',
     type: 'auth',
     listRule: '@request.auth.id != ""',
     viewRule: '@request.auth.id != ""',
     createRule: '',
-    updateRule: 'id = @request.auth.id',
+    updateRule: 'id = @request.auth.id && role = @request.auth.role',
     deleteRule: '@request.auth.role = "ADMIN"',
     fields: [
       new TextField({ name: 'name', required: false }),
@@ -92,14 +95,14 @@ app.onBootstrap.bindFunc(async (e) => {
     ]
   }));
 
-  // 4. buses
+  // 4. buses — Drivers can ONLY update status/fields of assigned bus
   await ensureCollection(new Collection({
     name: 'buses',
     type: 'base',
     listRule: '',
     viewRule: '',
     createRule: '@request.auth.role = "ADMIN"',
-    updateRule: '',
+    updateRule: '@request.auth.role = "ADMIN" || (@request.auth.role = "DRIVER" && driver_id = @request.auth.id)',
     deleteRule: '@request.auth.role = "ADMIN"',
     fields: [
       new TextField({ name: 'bus_number', required: true }),
@@ -110,14 +113,14 @@ app.onBootstrap.bindFunc(async (e) => {
     ]
   }));
 
-  // 5. trips
+  // 5. trips — Drivers can ONLY create/update their OWN trips
   await ensureCollection(new Collection({
     name: 'trips',
     type: 'base',
     listRule: '',
     viewRule: '',
-    createRule: '@request.auth.id != ""',
-    updateRule: '@request.auth.id != ""',
+    createRule: '@request.auth.role = "DRIVER" || @request.auth.role = "ADMIN"',
+    updateRule: '@request.auth.role = "ADMIN" || (@request.auth.role = "DRIVER" && driver_id = @request.auth.id)',
     deleteRule: '@request.auth.role = "ADMIN"',
     fields: [
       new RelationField({ name: 'bus_id', collectionName: 'buses', required: true }),
@@ -129,14 +132,14 @@ app.onBootstrap.bindFunc(async (e) => {
     ]
   }));
 
-  // 6. live_locations
+  // 6. live_locations — Telemetry streaming restricted to DRIVER & ADMIN
   await ensureCollection(new Collection({
     name: 'live_locations',
     type: 'base',
     listRule: '',
     viewRule: '',
-    createRule: '@request.auth.id != ""',
-    updateRule: '@request.auth.id != ""',
+    createRule: '@request.auth.role = "DRIVER" || @request.auth.role = "ADMIN"',
+    updateRule: '@request.auth.role = "DRIVER" || @request.auth.role = "ADMIN"',
     deleteRule: '@request.auth.role = "ADMIN"',
     fields: [
       new RelationField({ name: 'bus_id', collectionName: 'buses', required: true }),

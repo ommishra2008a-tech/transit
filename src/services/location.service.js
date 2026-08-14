@@ -3,12 +3,21 @@ import sol from '../lib/solarch';
 const locationListeners = new Set();
 
 export async function updateLocation(busId, tripId, latitude, longitude, speed) {
+  // Validate geographic coordinate boundaries and speed
+  if (typeof latitude !== 'number' || latitude < -90 || latitude > 90) {
+    throw new Error('Invalid latitude: must be between -90 and 90');
+  }
+  if (typeof longitude !== 'number' || longitude < -180 || longitude > 180) {
+    throw new Error('Invalid longitude: must be between -180 and 180');
+  }
+  const cleanSpeed = Math.max(0, Number(speed) || 0);
+
   const locRecord = {
     bus_id: busId,
     trip_id: tripId,
     latitude,
     longitude,
-    speed: speed || 0,
+    speed: cleanSpeed,
     timestamp: new Date().toISOString(),
   };
 
