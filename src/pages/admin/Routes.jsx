@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Route as RouteIcon, ChevronDown, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Route as RouteIcon, ChevronDown, ChevronUp, MapPin } from 'lucide-react';
 import { getRoutes, getStopsByRoute } from '../../services/route.service';
 import StatusBadge from '../../components/StatusBadge/StatusBadge';
 import StopList from '../../components/StopList/StopList';
@@ -15,7 +16,7 @@ export default function Routes() {
 
   useEffect(() => {
     getRoutes()
-      .then(setRoutes)
+      .then((r) => setRoutes(r || []))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -28,12 +29,13 @@ export default function Routes() {
     }
     setSelectedRoute(route);
     const s = await getStopsByRoute(route.id);
-    setStops(s);
+    setStops(s || []);
   }
 
   if (loading) {
     return (
       <PageContainer narrow>
+        <div className="skeleton h-24 w-full rounded-3xl" />
         {[1, 2, 3].map((i) => <div key={i} className="skeleton h-20 rounded-2xl" />)}
       </PageContainer>
     );
@@ -42,54 +44,73 @@ export default function Routes() {
   return (
     <PageContainer narrow>
       <PageHeader
-        light
         title="Route & Stop Manager 🗺️"
-        subtitle={`${routes.length} configured city routes`}
+        subtitle={`Managing ${routes.length} configured city transport route corridors.`}
+        badge="Route Corridors"
+        badgeIcon={MapPin}
       />
 
       <div className="space-y-3">
         {routes.map((route, idx) => {
           const isExpanded = selectedRoute?.id === route.id;
           return (
-            <div key={route.id} className="animate-fade-in" style={{ animationDelay: `${idx * 60}ms` }}>
+            <motion.div
+              key={route.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.04, duration: 0.2 }}
+            >
               <Card
-                hover
-                className={`p-4 sm:p-5 cursor-pointer transition-all bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 ${
-                  isExpanded ? 'border-blue-500 dark:border-blue-600 ring-2 ring-blue-500/10' : ''
+                interactive
+                className={`p-4 sm:p-5 transition-all ${
+                  isExpanded ? 'border-blue-500 dark:border-blue-600 ring-2 ring-blue-500/15' : ''
                 }`}
                 onClick={() => handleSelectRoute(route)}
               >
-                <div className="flex items-center justify-between mb-1.5 sm:mb-2 gap-2">
-                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400 flex items-center justify-center font-bold border border-blue-100 dark:border-blue-900 flex-shrink-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold border border-blue-100 dark:border-blue-900 flex-shrink-0">
                       <RouteIcon size={18} />
                     </div>
-                    <h3 className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base lg:text-lg truncate">{route.route_name}</h3>
+                    <div className="min-w-0">
+                      <h3 className="font-extrabold text-slate-900 dark:text-white text-base truncate">{route.route_name}</h3>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 mt-0.5">
+                        <span className="truncate">{route.start_location}</span>
+                        <span className="text-blue-500">→</span>
+                        <span className="truncate">{route.end_location}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <StatusBadge status={route.status} />
-                    <span className="text-slate-400">
+                    <span className="text-slate-400 p-1">
                       {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400 pl-11 sm:pl-14">
-                  <span className="truncate">{route.start_location}</span>
-                  <span className="text-slate-300 dark:text-slate-600 flex-shrink-0">→</span>
-                  <span className="truncate">{route.end_location}</span>
-                </div>
               </Card>
 
-              {/* Stop Sequence Dropdown */}
-              {isExpanded && (
-                <Card className="ml-3 sm:ml-4 md:ml-6 mt-2 p-4 sm:p-5 animate-slide-up border-blue-200 dark:border-blue-900 bg-slate-50/70 dark:bg-slate-900/60">
-                  <h4 className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 sm:mb-4">
-                    STOP SEQUENCE ({stops.length} STOPS)
-                  </h4>
-                  <StopList stops={stops} />
-                </Card>
-              )}
-            </div>
+              {/* Stop Sequence Accordion */}
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    <Card className="ml-3 sm:ml-6 mt-2 p-5 border-blue-200 dark:border-blue-900/60 bg-blue-50/40 dark:bg-slate-900/80 backdrop-blur-md">
+                      <div className="flex items-center justify-between text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4 pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                        <span>STATION STOP SEQUENCE</span>
+                        <span className="text-blue-600 dark:text-blue-400 font-extrabold">{stops.length} STOPS</span>
+                      </div>
+                      <StopList stops={stops} />
+                    </Card>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           );
         })}
       </div>
