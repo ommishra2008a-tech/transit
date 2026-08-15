@@ -13,8 +13,7 @@ if (!process.env.SOLARCH_JWT_SECRET) {
   if (process.env.NODE_ENV === 'production') {
     throw new Error('FATAL SECURITY ERROR: SOLARCH_JWT_SECRET environment variable is missing in production!');
   }
-  process.env.SOLARCH_JWT_SECRET = 'smart-transit-super-secret-jwt-key-2026-sih25013';
-}
+ }
 
 const app = new Solarch({
   defaultDev: process.env.NODE_ENV !== 'production',
