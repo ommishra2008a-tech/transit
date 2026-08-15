@@ -12,10 +12,16 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [requestAdmin, setRequestAdmin] = useState(false);
-  const [validationError, setValidationError] = useState('');
+  const [signupError, setSignupError] = useState('');
   
-  const { signup, user, loading, error, clearError } = useAuth();
+  const { signup, user, loading, clearError } = useAuth();
   const navigate = useNavigate();
+
+  // Clear any previous error on initial mount
+  useEffect(() => {
+    setSignupError('');
+    clearError();
+  }, [clearError]);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -33,16 +39,26 @@ export default function Signup() {
 
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
-    setValidationError('');
+    setSignupError('');
     clearError();
     
+    if (!name.trim()) {
+      setSignupError('Please enter your full name.');
+      return;
+    }
+
+    if (!email.trim()) {
+      setSignupError('Please enter a valid email address.');
+      return;
+    }
+
     if (password !== confirmPassword) {
-      setValidationError('Passwords do not match');
+      setSignupError('Passwords do not match.');
       return;
     }
     
     if (password.length < 8) {
-      setValidationError('Password must be at least 8 characters');
+      setSignupError('Password must be at least 8 characters.');
       return;
     }
 
@@ -50,7 +66,7 @@ export default function Signup() {
       await signup(name, email, password, confirmPassword, requestAdmin);
       // Navigation handled by the useEffect above upon successful login
     } catch (err) {
-      // Error handled by useAuth and displayed below
+      setSignupError(err.message || 'Failed to create account. Please try again.');
     }
   };
 
@@ -77,13 +93,13 @@ export default function Signup() {
             <p className="text-slate-400 text-sm mt-1">Join the SmartTransit network</p>
           </div>
 
-          {(error || validationError) && (
+          {signupError && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               className="mb-6 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm font-medium text-center shadow-lg"
             >
-              {validationError || error}
+              {signupError}
             </motion.div>
           )}
 
@@ -100,7 +116,7 @@ export default function Signup() {
                   type="text"
                   placeholder="Full Name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => { setName(e.target.value); setSignupError(''); }}
                   required
                   className="w-full bg-[#070b13] border border-white/5 text-white text-sm placeholder:text-slate-500 focus:border-blue-500/50 focus:bg-[#0b101a] focus:ring-1 focus:ring-blue-500/50 h-[56px] rounded-2xl pl-12 pr-4 outline-none transition-all shadow-inner"
                 />
@@ -116,7 +132,7 @@ export default function Signup() {
                   type="email"
                   placeholder="Email Address"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); setSignupError(''); }}
                   required
                   className="w-full bg-[#070b13] border border-white/5 text-white text-sm placeholder:text-slate-500 focus:border-blue-500/50 focus:bg-[#0b101a] focus:ring-1 focus:ring-blue-500/50 h-[56px] rounded-2xl pl-12 pr-4 outline-none transition-all shadow-inner"
                 />
@@ -130,9 +146,9 @@ export default function Signup() {
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Password"
+                  placeholder="Password (min. 8 characters)"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setSignupError(''); }}
                   required
                   className="w-full bg-[#070b13] border border-white/5 text-white text-sm placeholder:text-slate-500 focus:border-blue-500/50 focus:bg-[#0b101a] focus:ring-1 focus:ring-blue-500/50 h-[56px] rounded-2xl pl-12 pr-12 outline-none transition-all shadow-inner"
                 />
@@ -155,7 +171,7 @@ export default function Signup() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Confirm Password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => { setConfirmPassword(e.target.value); setSignupError(''); }}
                   required
                   className="w-full bg-[#070b13] border border-white/5 text-white text-sm placeholder:text-slate-500 focus:border-blue-500/50 focus:bg-[#0b101a] focus:ring-1 focus:ring-blue-500/50 h-[56px] rounded-2xl pl-12 pr-4 outline-none transition-all shadow-inner"
                 />

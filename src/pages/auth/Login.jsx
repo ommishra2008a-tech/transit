@@ -7,13 +7,20 @@ import SmartTransitLogo from '../../components/SmartTransitLogo';
 
 export default function Login() {
   const [activeTab, setActiveTab] = useState('PASSENGER');
-  const [email, setEmail] = useState('passenger@transit.dev');
-  const [password, setPassword] = useState('123456password');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [loginError, setLoginError] = useState('');
   
-  const { login, user, loading, error } = useAuth();
+  const { login, user, loading, clearError } = useAuth();
   const navigate = useNavigate();
+
+  // Clear errors on initial mount
+  useEffect(() => {
+    setLoginError('');
+    clearError();
+  }, [clearError]);
 
   // Single source of truth for post-login navigation.
   // When user state becomes set (after login or from localStorage cache), navigate.
@@ -39,26 +46,40 @@ export default function Login() {
   const handleTabChange = (key) => {
     setActiveTab(key);
     setEmail(roleAccounts[key].email);
+    setPassword('');
+    setLoginError('');
+    clearError();
   };
 
   const handleSignInClick = async (e) => {
     e?.preventDefault();
-    if (!email || !password) return;
+    setLoginError('');
+    clearError();
+
+    if (!email || !password) {
+      setLoginError('Please enter both email and password.');
+      return;
+    }
     
     try {
       await login(email, password);
       // Navigation is handled by the useEffect above reacting to user state change
     } catch (err) {
-      console.error('Login failed', err);
+      setLoginError(err.message || 'Invalid email or password.');
     }
   };
 
   const handleDemoAccess = async () => {
+    setLoginError('');
+    clearError();
+    const demoEmail = roleAccounts[activeTab].email;
+    setEmail(demoEmail);
+    setPassword('123456password');
     try {
-      await login(roleAccounts[activeTab].email, '123456password');
+      await login(demoEmail, '123456password');
       // Navigation is handled by the useEffect above reacting to user state change
     } catch (err) {
-      console.error('Demo Login failed', err);
+      setLoginError(err.message || 'Demo Login failed.');
     }
   };
 
@@ -89,13 +110,13 @@ export default function Login() {
             <p className="text-slate-400 text-sm mt-1">Sign in to continue your journey</p>
           </div>
 
-          {error && (
+          {loginError && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               className="mb-6 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm font-medium text-center shadow-lg"
             >
-              {error}
+              {loginError}
             </motion.div>
           )}
 
@@ -134,7 +155,7 @@ export default function Login() {
                   type="email"
                   placeholder="Email Address"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); setLoginError(''); }}
                   required
                   className="w-full bg-[#070b13] border border-white/5 text-white text-sm placeholder:text-slate-500 focus:border-blue-500/50 focus:bg-[#0b101a] focus:ring-1 focus:ring-blue-500/50 h-[56px] rounded-2xl pl-12 pr-4 outline-none transition-all shadow-inner"
                 />
@@ -150,7 +171,7 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setLoginError(''); }}
                   required
                   className="w-full bg-[#070b13] border border-white/5 text-white text-sm placeholder:text-slate-500 focus:border-blue-500/50 focus:bg-[#0b101a] focus:ring-1 focus:ring-blue-500/50 h-[56px] rounded-2xl pl-12 pr-12 outline-none transition-all tracking-[0.2em] shadow-inner"
                 />

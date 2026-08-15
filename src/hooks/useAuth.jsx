@@ -114,9 +114,10 @@ export function AuthProvider({ children }) {
       setLoading(false);
       return loggedUser.role || 'PASSENGER';
     } catch (err) {
-      setError(err.message || 'Invalid email or password. Please try again.');
+      const msg = err.message || 'Invalid email or password. Please try again.';
+      setError(msg);
       setLoading(false);
-      throw err;
+      throw new Error(msg);
     }
   }, []);
 
@@ -124,8 +125,8 @@ export function AuthProvider({ children }) {
     setError('');
     setLoading(true);
     try {
-      // 1. Create the user. The backend will forcibly set role=PASSENGER.
-      await fetch(`${solarch.db.baseUrl}/api/auth/signup`, {
+      // 1. Create the user via backend endpoint. The backend will forcibly set role=PASSENGER.
+      const signupRes = await fetch(`${solarch.url}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -137,12 +138,22 @@ export function AuthProvider({ children }) {
         })
       });
       
+      const resData = await signupRes.json().catch(() => ({}));
+      if (!signupRes.ok || resData.code >= 400) {
+        throw new Error(resData.message || 'Failed to create account.');
+      }
+      
       // 2. Automatically log them in after successful creation
-      return await login(email, password);
+      try {
+        return await login(email, password);
+      } catch (loginErr) {
+        throw new Error('Account created successfully, but automatic login failed. Please sign in.');
+      }
     } catch (err) {
-      setError(err.message || 'Failed to create account. Please check your information.');
+      const msg = err.message || 'Failed to create account. Please check your information.';
+      setError(msg);
       setLoading(false);
-      throw err;
+      throw new Error(msg);
     }
   }, [login]);
 
@@ -156,6 +167,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('solarch_token');
     localStorage.removeItem('solarch_user');
     setUser(null);
+    setError('');
   }, []);
 
   const clearError = useCallback(() => setError(''), []);
