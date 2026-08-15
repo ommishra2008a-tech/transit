@@ -77,10 +77,13 @@ export default function ActiveTrip() {
 
           // Update Backend
           try {
-            await solarch.db.collection('trips').update(trip.$id, {
-              current_location: { lat: newLoc[0], lng: newLoc[1] },
-              speed_kmh: calculatedSpeed,
-              updated_at: new Date().toISOString()
+            await solarch.db.collection('live_locations').create({
+              bus_id: trip.bus_id || trip.bus_number,
+              trip_id: trip.id || trip.$id,
+              latitude: newLoc[0],
+              longitude: newLoc[1],
+              speed: calculatedSpeed,
+              timestamp: new Date().toISOString()
             });
           } catch (err) {
             console.error('GPS update failed', err);

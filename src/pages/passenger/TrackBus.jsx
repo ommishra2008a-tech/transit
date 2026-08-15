@@ -108,13 +108,30 @@ export default function TrackBus() {
 
   const [error, setError] = useState(null);
 
-  // Fetch real trip details
+  // Fetch real trip details and subscribe to live telemetry
   useEffect(() => {
+    let unsubscribe = null;
     const init = async () => {
       try {
         const tripDoc = await solarch.db.collection('trips').getById(id);
         if (!tripDoc) throw new Error("Trip not found");
         setTrip(tripDoc);
+
+        // Subscribe to live location SSE Stream
+        unsubscribe = await solarch.db.collection('live_locations').subscribe(
+          { filter: { trip_id: id } },
+          (event) => {
+            if (event.action === 'create' || event.action === 'update') {
+               setTrip(prev => {
+                 if (!prev) return prev;
+                 return {
+                   ...prev,
+                   current_location: { lat: event.document.latitude, lng: event.document.longitude }
+                 };
+               });
+            }
+          }
+        );
       } catch (err) {
         console.error('Failed to load trip from DB:', err);
         setError('This bus is currently unavailable or the trip has ended.');
@@ -123,6 +140,10 @@ export default function TrackBus() {
       }
     };
     init();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [id]);
 
   const toggleLocation = () => {

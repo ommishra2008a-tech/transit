@@ -24,9 +24,9 @@ export default function AdminDashboard() {
         const active = trips.filter(t => t.status === 'IN_PROGRESS' || t.status === 'SCHEDULED');
         
         setStats({
-          total: trips.length > 0 ? trips.length + 12 : 36,
-          active: active.length > 0 ? active.length + 8 : 28,
-          running: running.length > 0 ? running.length : 22
+          total: trips.length,
+          active: active.length,
+          running: running.length
         });
         setActiveTrips(running.slice(0, 5));
       } catch (err) {
@@ -139,20 +139,9 @@ export default function AdminDashboard() {
                 </div>
               ))
             ) : (
-              <>
-                <div className="bg-[#0b101a]/80 backdrop-blur-md border border-white/5 rounded-2xl p-4 flex items-center justify-between shadow-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center">
-                      <Bus size={20} />
-                    </div>
-                    <div>
-                      <h4 className="text-[15px] font-bold text-white tracking-wide">P8-BUS-001</h4>
-                      <p className="text-[12px] text-slate-400">Airport Road → Vijay Nagar</p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 uppercase tracking-wider">Running</span>
-                </div>
-              </>
+              <div className="text-center text-slate-400 p-4">
+                No active trips found.
+              </div>
             )}
           </div>
         </motion.div>

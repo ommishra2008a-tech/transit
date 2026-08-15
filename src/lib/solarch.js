@@ -74,25 +74,90 @@ class SolarchClient {
         update: async (id, data) => {
           return await this.request(`/api/collections/${colName}/records/${id}`, 'PATCH', data);
         },
-        subscribe: (options, callback) => {
-          // Placeholder for real-time SSE or WebSocket subscription
-          // In a real solarch client, this connects to the realtime endpoint.
-          // For now, we return a mock unsubscribe function.
-          const interval = setInterval(async () => {
-            try {
-              // Simulated polling for the demo since SSE isn't fully wired here
-              const doc = await this.db.collection(colName).getById(options.filter.$id);
-              callback({ action: 'UPDATE', document: doc });
-            } catch (e) {
-              // ignore
-            }
-          }, 5000);
+        subscribe: async (options, callback) => {
+          if (!this.sse) {
+            this.sse = new EventSource(`${this.url}/api/realtime`);
+            this.activeSubscriptions = new Map();
+
+            this.sse.addEventListener('PB_CONNECT', async (e) => {
+              try {
+                const data = JSON.parse(e.data);
+                this.clientId = data.clientId;
+                this.submitSubscriptions();
+              } catch (err) {}
+            });
+
+            this.sse.addEventListener(colName, (e) => {
+              try {
+                const data = JSON.parse(e.data);
+                const colSubs = this.activeSubscriptions.get(colName);
+                if (colSubs) {
+                  colSubs.forEach(sub => {
+                    // Match pocketbase filter structure if present
+                    if (sub.options?.filter?.$id && data.record.id !== sub.options.filter.$id) return;
+                    if (sub.options?.filter?.trip_id && data.record.trip_id !== sub.options.filter.trip_id) return;
+                    sub.callback({ action: data.action, document: data.record });
+                  });
+                }
+              } catch (err) {}
+            });
+          } else {
+             // If sse exists, bind listener for this colName if not present
+             if (!this.activeSubscriptions.has(colName)) {
+               this.sse.addEventListener(colName, (e) => {
+                  try {
+                    const data = JSON.parse(e.data);
+                    const colSubs = this.activeSubscriptions.get(colName);
+                    if (colSubs) {
+                      colSubs.forEach(sub => {
+                        if (sub.options?.filter?.$id && data.record.id !== sub.options.filter.$id) return;
+                        if (sub.options?.filter?.trip_id && data.record.trip_id !== sub.options.filter.trip_id) return;
+                        sub.callback({ action: data.action, document: data.record });
+                      });
+                    }
+                  } catch (err) {}
+                });
+             }
+          }
+
+          const subId = Math.random().toString(36).substring(7);
+          if (!this.activeSubscriptions.has(colName)) {
+            this.activeSubscriptions.set(colName, new Set());
+          }
+          this.activeSubscriptions.get(colName).add({ id: subId, callback, options });
           
-          return () => clearInterval(interval);
+          if (this.clientId) {
+            this.submitSubscriptions();
+          }
+
+          return () => {
+            const colSubs = this.activeSubscriptions.get(colName);
+            if (colSubs) {
+              for (const sub of colSubs) {
+                if (sub.id === subId) {
+                  colSubs.delete(sub);
+                }
+              }
+            }
+          };
         }
       })
     };
   }
+
+  async submitSubscriptions() {
+    if (!this.clientId) return;
+    const subs = Array.from(this.activeSubscriptions.keys());
+    try {
+      await this.request('/api/realtime', 'POST', {
+        clientId: this.clientId,
+        subscriptions: subs
+      });
+    } catch (err) {
+      console.error('Failed to submit SSE subscriptions', err);
+    }
+  }
+
 
   async request(path, method, body = null) {
     const headers = {
