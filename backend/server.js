@@ -13,7 +13,7 @@ if (!process.env.SOLARCH_JWT_SECRET) {
   if (process.env.NODE_ENV === 'production') {
     throw new Error('FATAL SECURITY ERROR: SOLARCH_JWT_SECRET environment variable is missing in production!');
   }
- }
+}
 
 const app = new Solarch({
   defaultDev: process.env.NODE_ENV !== 'production',
@@ -163,7 +163,7 @@ app.onBootstrap.bindFunc(async (e) => {
       db.prepare(`UPDATE _r_${usersCol.id} SET role = 'DRIVER', approval_status = 'APPROVED' WHERE email = 'driver@transit.dev'`).run();
       db.prepare(`UPDATE _r_${usersCol.id} SET role = 'PASSENGER', approval_status = 'APPROVED' WHERE email = 'passenger@transit.dev' AND (role IS NULL OR role = '')`).run();
     }
-  } catch (err) {}
+  } catch (err) { }
 
   await appInstance.reloadCachedCollections();
 });
@@ -189,8 +189,39 @@ app.onRecordCreate.bindFunc(async (e) => {
   }
 });
 
-// Root URL redirect GET / -> /_/ (Solarch Admin UI)
+// CORS configuration for SmartTransit frontend
 app.onServe.bindFunc((e) => {
+  const allowedOrigins = new Set([
+    'https://transit.ommishra2008a.workers.dev',
+    'http://localhost:5173',
+    'http://localhost:5174'
+  ]);
+
+  e.router.use((req, res, next) => {
+    const origin = req.headers.origin;
+
+    if (origin && allowedOrigins.has(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader(
+        'Access-Control-Allow-Methods',
+        'GET, POST, PATCH, PUT, DELETE, OPTIONS'
+      );
+      res.setHeader(
+        'Access-Control-Allow-Headers',
+        'Content-Type, Authorization'
+      );
+    }
+
+    // Handle browser CORS preflight
+    if (req.method === 'OPTIONS') {
+      return res.status(204).end();
+    }
+
+    next();
+  });
+
+  // Root URL redirect GET / -> /_/ (Solarch Admin UI)
   e.router.get('/', (req, res) => {
     res.redirect(302, '/_/');
   });
