@@ -2,13 +2,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Check, X, ShieldAlert, UserCheck } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 import { solarch } from '../../lib/solarch';
+import AuthRequiredModal from '../../components/AuthRequiredModal';
 
 export default function DriverApprovals() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('PENDING');
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
+  const isAdmin = user && (user.role || '').toUpperCase() === 'ADMIN';
 
   useEffect(() => {
     fetchDrivers();
@@ -16,8 +22,13 @@ export default function DriverApprovals() {
 
   const fetchDrivers = async () => {
     try {
-      const res = await solarch.db.collection('users').get({ filter: { role: 'driver' }, limit: 100 });
-      const docs = res?.items || res?.documents || [];
+      const res = await solarch.db.collection('users').get({ filter: { role: 'DRIVER' }, limit: 100 });
+      let docs = res?.items || res?.documents || [];
+      if (docs.length === 0) {
+        // Fallback check lowercase role
+        const resLower = await solarch.db.collection('users').get({ filter: { role: 'driver' }, limit: 100 });
+        docs = resLower?.items || resLower?.documents || [];
+      }
       setDrivers(docs);
     } catch (err) {
       console.error('Failed to fetch drivers', err);
@@ -27,9 +38,14 @@ export default function DriverApprovals() {
   };
 
   const handleApprove = async (driverId) => {
+    if (!isAdmin) {
+      setAuthModalOpen(true);
+      return;
+    }
+
     try {
       await solarch.db.collection('users').update(driverId, { approval_status: 'APPROVED' });
-      setDrivers(prev => prev.map(d => d.$id === driverId ? { ...d, approval_status: 'APPROVED' } : d));
+      setDrivers(prev => prev.map(d => d.$id === driverId || d.id === driverId ? { ...d, approval_status: 'APPROVED' } : d));
     } catch (err) {
       console.error('Failed to approve driver', err);
       alert('Approval failed. Check connection.');
@@ -38,7 +54,7 @@ export default function DriverApprovals() {
 
   const filteredDrivers = drivers.filter(d => {
     const status = d.approval_status || 'PENDING';
-    return status === filter;
+    return status.toUpperCase() === filter;
   });
 
   return (
@@ -79,37 +95,40 @@ export default function DriverApprovals() {
             <div key={i} className="bg-[#0b101a]/50 border border-white/5 rounded-2xl h-[80px] animate-pulse"></div>
           ))
         ) : filteredDrivers.length > 0 ? (
-          filteredDrivers.map(driver => (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={driver.$id}
-              className="bg-[#0b101a]/80 backdrop-blur-md border border-white/5 rounded-2xl p-4 flex items-center justify-between shadow-lg"
-            >
-              <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${filter === 'PENDING' ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                  {filter === 'PENDING' ? <ShieldAlert size={20} /> : <UserCheck size={20} />}
+          filteredDrivers.map(driver => {
+            const id = driver.id || driver.$id;
+            return (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={id}
+                className="bg-[#0b101a]/80 backdrop-blur-md border border-white/5 rounded-2xl p-4 flex items-center justify-between shadow-lg"
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${filter === 'PENDING' ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                    {filter === 'PENDING' ? <ShieldAlert size={20} /> : <UserCheck size={20} />}
+                  </div>
+                  <div>
+                    <h4 className="text-[14px] font-bold text-white tracking-wide">{driver.name || driver.email}</h4>
+                    <p className="text-[11px] text-slate-400 mt-0.5">{driver.phone || 'No Phone'}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-[14px] font-bold text-white tracking-wide">{driver.name || driver.email}</h4>
-                  <p className="text-[11px] text-slate-400 mt-0.5">{driver.phone || 'No Phone'}</p>
-                </div>
-              </div>
-              
-              {filter === 'PENDING' && (
-                <button 
-                  onClick={() => handleApprove(driver.$id)}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-[12px] font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-1.5"
-                >
-                  <Check size={16} strokeWidth={3} />
-                  Approve
-                </button>
-              )}
-              {filter === 'APPROVED' && (
-                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 uppercase tracking-wider">
-                  Active
-                </span>
-              )}
-            </motion.div>
-          ))
+                
+                {filter === 'PENDING' && (
+                  <button 
+                    onClick={() => handleApprove(id)}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-[12px] font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-1.5"
+                  >
+                    <Check size={16} strokeWidth={3} />
+                    Approve
+                  </button>
+                )}
+                {filter === 'APPROVED' && (
+                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 uppercase tracking-wider">
+                    Active
+                  </span>
+                )}
+              </motion.div>
+            );
+          })
         ) : (
           <div className="flex flex-col items-center justify-center h-48 text-slate-500 mt-10">
             {filter === 'PENDING' ? <ShieldAlert size={48} className="mb-4 opacity-30" /> : <UserCheck size={48} className="mb-4 opacity-30" />}
@@ -118,6 +137,12 @@ export default function DriverApprovals() {
         )}
       </div>
 
+      <AuthRequiredModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        requiredRole="Admin"
+        actionName="approving drivers"
+      />
     </div>
   );
 }

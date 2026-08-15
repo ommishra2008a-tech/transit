@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import { ArrowLeft, Target, Layers, Wifi, ShieldAlert, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { solarch } from '../../lib/solarch';
+import { fetchRoadSnappedRoute } from '../../lib/osrm';
+import AuthRequiredModal from '../../components/AuthRequiredModal';
 
 // Create a custom pulsing dot icon for the driver's bus
 const driverBusIconHtml = `
@@ -27,6 +29,39 @@ const driverBusMarkerIcon = new L.DivIcon({
   iconAnchor: [20, 20]
 });
 
+// Destination Pole
+const createDestinationIcon = () => {
+  return L.divIcon({
+    className: 'custom-dest-marker',
+    html: `
+      <div class="relative flex flex-col items-center" style="width: 40px; height: 60px; margin-left: -20px; margin-top: -60px;">
+        <div class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center border-[3px] border-white shadow-[0_4px_15px_rgba(0,0,0,0.4)] z-10">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div class="w-1.5 h-6 bg-red-600 shadow-sm z-0 -mt-1 rounded-b-sm"></div>
+      </div>
+    `,
+    iconSize: [40, 60],
+    iconAnchor: [20, 60]
+  });
+};
+
+// Origin Dot
+const createOriginIcon = () => {
+  return L.divIcon({
+    className: 'custom-origin-marker',
+    html: `
+      <div class="relative flex flex-col items-center" style="width: 32px; height: 32px; margin-left: -16px; margin-top: -16px;">
+        <div class="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center border-[3px] border-white shadow-[0_4px_15px_rgba(0,0,0,0.4)] z-10">
+          <div class="w-2.5 h-2.5 bg-white rounded-full"></div>
+        </div>
+      </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16]
+  });
+};
+
 export default function ActiveTrip() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -38,19 +73,58 @@ export default function ActiveTrip() {
   const [isMinimized, setIsMinimized] = useState(false);
 
   const [isTracking, setIsTracking] = useState(true);
+  const [routeLine, setRouteLine] = useState([]);
+  const [stops, setStops] = useState([]);
+  const [routeStatus, setRouteStatus] = useState('loading'); // 'loading', 'ok', 'failed'
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
+  const isRealDriver = user && (user.role || '').toUpperCase() === 'DRIVER';
 
   // Initialize Trip
   useEffect(() => {
     const initTrip = async () => {
       try {
-        const response = await solarch.db.collection('trips').get({
-          filter: { bus_number: user?.assigned_bus, status: 'IN_PROGRESS' },
-          limit: 1
-        });
-        
-        const docs = response?.items || response?.documents || [];
+        let docs = [];
+        if (user?.assigned_bus) {
+          const response = await solarch.db.collection('trips').get({
+            filter: { bus_number: user.assigned_bus, status: 'IN_PROGRESS' },
+            limit: 1
+          });
+          docs = response?.items || response?.documents || [];
+        }
+
+        if (docs.length === 0) {
+          // In view-only mode or fallback, load any trip to view the road map
+          const anyRes = await solarch.db.collection('trips').get({ limit: 1 });
+          docs = anyRes?.items || anyRes?.documents || [];
+        }
+
         if (docs.length > 0) {
-          setTrip(docs[0]);
+          const tripDoc = docs[0];
+          setTrip(tripDoc);
+
+          if (tripDoc.route_id) {
+            const stopsRes = await solarch.db.collection('stops').get({
+              filter: { route_id: tripDoc.route_id },
+              limit: 100
+            });
+            if (stopsRes && stopsRes.items) {
+              const sortedStops = stopsRes.items.sort((a, b) => a.stop_order - b.stop_order);
+              setStops(sortedStops);
+              if (sortedStops.length > 0) {
+                setLocation([sortedStops[0].latitude, sortedStops[0].longitude]);
+              }
+              const coords = await fetchRoadSnappedRoute(sortedStops);
+              if (coords) {
+                setRouteLine(coords);
+                setRouteStatus('ok');
+              } else {
+                console.warn("Road routing unavailable from OSRM for active trip.");
+                setRouteLine([]);
+                setRouteStatus('failed');
+              }
+            }
+          }
         } else {
           // If no active trip, go back to dashboard
           navigate('/driver');
@@ -62,6 +136,19 @@ export default function ActiveTrip() {
 
     if (user) initTrip();
   }, [user, navigate]);
+
+  const handleRetryRoute = async () => {
+    if (!stops || stops.length < 2) return;
+    setRouteStatus('loading');
+    const coords = await fetchRoadSnappedRoute(stops, true);
+    if (coords) {
+      setRouteLine(coords);
+      setRouteStatus('ok');
+    } else {
+      setRouteLine([]);
+      setRouteStatus('failed');
+    }
+  };
 
   // Handle GPS Tracking
   useEffect(() => {
@@ -102,6 +189,12 @@ export default function ActiveTrip() {
   }, [trip, isTracking]);
 
   const handleEndTrip = async () => {
+    if (!isRealDriver) {
+      setShowEndConfirm(false);
+      setAuthModalOpen(true);
+      return;
+    }
+
     if (!trip) return;
     try {
       await solarch.db.collection('trips').update(trip.$id, {
@@ -172,6 +265,19 @@ export default function ActiveTrip() {
           <span className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">Trip In Progress</span>
           <span className="text-[14px] font-bold text-white tracking-wide">{trip?.bus_number || 'Loading...'}</span>
         </div>
+
+        {/* Warning / Status banner */}
+        {routeStatus === 'failed' && (
+          <div className="absolute top-28 left-1/2 -translate-x-1/2 z-[1000] bg-slate-900/90 border border-amber-500/40 text-amber-300 px-4 py-2 rounded-full text-xs font-semibold shadow-2xl flex items-center gap-3 pointer-events-auto backdrop-blur-md">
+            <span>⚠️ Route temporarily unavailable</span>
+            <button 
+              onClick={handleRetryRoute}
+              className="px-2.5 py-0.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/30 rounded-full font-bold transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
         
         <div className="flex items-center gap-2 pointer-events-auto">
           <button 
@@ -207,6 +313,25 @@ export default function ActiveTrip() {
             url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
             attribution='&copy; Google Maps'
           />
+          
+          {/* Draw Route Polyline only when valid road geometry exists */}
+          {routeStatus === 'ok' && routeLine.length > 0 && (
+            <Polyline positions={routeLine} color="#3b82f6" weight={5} opacity={0.8} />
+          )}
+          
+          {/* Draw Origin/Destination Stops */}
+          {stops.length > 0 && (
+             <Marker position={[stops[0].latitude, stops[0].longitude]} icon={createOriginIcon()} />
+          )}
+          {stops.length > 1 && (
+             <Marker position={[stops[stops.length - 1].latitude, stops[stops.length - 1].longitude]} icon={createDestinationIcon()} />
+          )}
+
+          {/* Draw Intermediate Stops */}
+          {stops.length > 2 && stops.slice(1, -1).map((stop) => (
+             <Marker key={stop.$id} position={[stop.latitude, stop.longitude]} icon={L.divIcon({ className: 'bg-white rounded-full border-[2px] border-blue-500 shadow-md', iconSize: [12, 12] })} />
+          ))}
+
           {location && (
             <Marker position={location} icon={driverBusMarkerIcon}>
               <Popup className="custom-popup">
@@ -327,6 +452,13 @@ export default function ActiveTrip() {
           </div>
         )}
       </AnimatePresence>
+
+      <AuthRequiredModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        requiredRole="Driver"
+        actionName="ending or updating active trips"
+      />
     </div>
   );
 }

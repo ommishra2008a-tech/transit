@@ -5,11 +5,16 @@ import { User, Phone, Bus, ShieldCheck, Check } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { solarch } from '../../lib/solarch';
 
+import AuthRequiredModal from '../../components/AuthRequiredModal';
+
 export default function DriverSetup() {
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
+  const isRealDriver = user && (user.role || '').toUpperCase() === 'DRIVER';
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -17,31 +22,34 @@ export default function DriverSetup() {
     assigned_bus: user?.assigned_bus || '',
   });
 
-  // If they already have all 3, they shouldn't be here
+  // If they already have all 3, they shouldn't be here (for drivers)
   useEffect(() => {
-    if (user?.name && user?.phone && user?.assigned_bus) {
+    if (isRealDriver && user?.name && user?.phone && user?.assigned_bus) {
       navigate('/driver', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, isRealDriver, navigate]);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.id]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isRealDriver) {
+      setAuthModalOpen(true);
+      return;
+    }
+
     setLoading(true);
     
     try {
-      // In a real app, we update the user's document in the users collection.
-      // Since solarch.auth.me returns the user, we assume the user has an $id
-      if (user && user.$id) {
-        await solarch.db.collection('users').update(user.$id, {
+      if (user && (user.$id || user.id)) {
+        await solarch.db.collection('users').update(user.$id || user.id, {
           name: formData.name,
           phone: formData.phone,
           assigned_bus: formData.assigned_bus
         });
       }
       
-      // Update context and navigate smoothly
       updateUser(formData);
       
       setSuccess(true);
@@ -140,6 +148,13 @@ export default function DriverSetup() {
           </motion.form>
         )}
       </div>
+
+      <AuthRequiredModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        requiredRole="Driver"
+        actionName="updating driver profile"
+      />
     </div>
   );
 }

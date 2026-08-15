@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, Search, MapPin, Navigation, Bus, Clock, Bell, User as UserIcon, Home, Star, Map as MapIcon, Heart } from 'lucide-react';
+import { Menu, Search, MapPin, Navigation, Bus, Clock, Bell, User as UserIcon, Home, Star, Map as MapIcon, Heart, Compass } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSidebar } from '../../contexts/SidebarContext';
 import { solarch } from '../../lib/solarch';
@@ -51,7 +51,9 @@ export default function PassengerHome() {
       <div className="flex-1 overflow-y-auto pb-24 relative z-10 px-5 pt-12">
         {/* Header */}
         <header className="flex items-center justify-between mb-8">
-          <div className="flex-1"></div>
+          <button onClick={openSidebar} className="p-2 -ml-2 text-slate-400 hover:text-white transition-colors">
+            <Menu size={24} />
+          </button>
           <div className="flex items-center gap-3">
             <button className="relative p-2 text-slate-400 hover:text-white transition-colors">
               <Bell size={22} />
@@ -137,6 +139,38 @@ export default function PassengerHome() {
               <p className="text-[12px] font-semibold text-amber-400">Favourites</p>
               <p className="text-[10px] text-amber-500/60">Saved routes</p>
             </div>
+          </div>
+        </motion.div>
+
+        {/* Explore Dashboards Demo Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="mb-8 bg-gradient-to-r from-blue-900/30 via-[#0b101a] to-purple-900/30 border border-white/10 rounded-2xl p-4 shadow-xl flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+              <Compass size={20} />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">Explore Dashboards</h4>
+              <p className="text-[11px] text-slate-400 mt-0.5">Explore Driver & Admin controls (View Only)</p>
+            </div>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={() => navigate('/driver')}
+              className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-lg text-xs font-semibold border border-white/10 transition-colors"
+            >
+              Driver
+            </button>
+            <button
+              onClick={() => navigate('/admin')}
+              className="px-2.5 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-lg text-xs font-bold border border-blue-500/30 transition-colors"
+            >
+              Admin
+            </button>
           </div>
         </motion.div>
 

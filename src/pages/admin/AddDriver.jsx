@@ -2,12 +2,18 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, User, Mail, Phone, Hash, ShieldCheck, Check } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 import { solarch } from '../../lib/solarch';
+import AuthRequiredModal from '../../components/AuthRequiredModal';
 
 export default function AddDriver() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
+  const isAdmin = user && (user.role || '').toUpperCase() === 'ADMIN';
 
   const [formData, setFormData] = useState({
     name: '',
@@ -20,6 +26,12 @@ export default function AddDriver() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isAdmin) {
+      setAuthModalOpen(true);
+      return;
+    }
+
     setLoading(true);
     
     try {
@@ -149,6 +161,13 @@ export default function AddDriver() {
           </motion.form>
         )}
       </div>
+
+      <AuthRequiredModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        requiredRole="Admin"
+        actionName="registering new drivers"
+      />
     </div>
   );
 }

@@ -55,7 +55,7 @@ export default function BusesManagement() {
             </button>
             <h1 className="text-[20px] font-bold tracking-wide">Buses</h1>
           </div>
-          <button onClick={() => navigate('/admin/add-driver')} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-xl text-[12px] font-bold transition-colors shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+          <button onClick={() => navigate('/admin/drivers/add')} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-xl text-[12px] font-bold transition-colors shadow-[0_0_15px_rgba(37,99,235,0.4)]">
             <Plus size={16} strokeWidth={3} />
             Add Driver
           </button>

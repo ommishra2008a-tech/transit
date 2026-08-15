@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, User, Bus, ShieldCheck, ArrowRight, Check, Zap, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -214,6 +214,15 @@ export default function Login() {
             <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" /> Secure</span>
             <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" /> Fast</span>
             <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]" /> Reliable</span>
+          </div>
+          
+          <div className="mt-6 text-center">
+            <p className="text-sm text-slate-400">
+              Don't have an account?{' '}
+              <Link to="/signup" className="text-blue-400 font-semibold hover:text-blue-300 transition-colors">
+                Sign Up
+              </Link>
+            </p>
           </div>
 
         </div>

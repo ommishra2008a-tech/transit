@@ -5,14 +5,7 @@ import { ArrowLeft, Clock, MapPin, Navigation, Map as MapIcon, Share2, Crosshair
 import { MapContainer, TileLayer, Marker, Polyline, ZoomControl } from 'react-leaflet';
 import L from 'leaflet';
 import { solarch } from '../../lib/solarch';
-
-// Mock Route Coordinates for Indore Route
-const ROUTE_COORDS = [
-  [22.7196, 75.8577],
-  [22.7210, 75.8600],
-  [22.7230, 75.8620],
-  [22.7250, 75.8650]
-];
+import { fetchRoadSnappedRoute } from '../../lib/osrm';
 
 // Beautiful Bus Sticker
 const createBusIcon = (busNumber) => {
@@ -86,6 +79,9 @@ export default function TrackBus() {
   const navigate = useNavigate();
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [routeLine, setRouteLine] = useState([]);
+  const [stops, setStops] = useState([]);
+  const [routeStatus, setRouteStatus] = useState('loading'); // 'loading', 'ok', 'failed'
 
   const [mapRef, setMapRef] = useState(null);
   const dragControls = useDragControls();
@@ -117,6 +113,30 @@ export default function TrackBus() {
         if (!tripDoc) throw new Error("Trip not found");
         setTrip(tripDoc);
 
+        // Fetch actual route stops
+        if (tripDoc.route_id) {
+          const stopsRes = await solarch.db.collection('stops').get({
+            filter: { route_id: tripDoc.route_id },
+            limit: 100
+          });
+          
+          if (stopsRes && stopsRes.items) {
+            const sortedStops = stopsRes.items.sort((a, b) => a.stop_order - b.stop_order);
+            setStops(sortedStops);
+            
+            // Try fetching road-snapped route
+            const coords = await fetchRoadSnappedRoute(sortedStops);
+            if (coords) {
+              setRouteLine(coords);
+              setRouteStatus('ok');
+            } else {
+              console.warn("Road routing unavailable from OSRM.");
+              setRouteLine([]); // Strictly do NOT fabricate straight-line geometry
+              setRouteStatus('failed');
+            }
+          }
+        }
+
         // Subscribe to live location SSE Stream
         unsubscribe = await solarch.db.collection('live_locations').subscribe(
           { filter: { trip_id: id } },
@@ -145,6 +165,19 @@ export default function TrackBus() {
       if (unsubscribe) unsubscribe();
     };
   }, [id]);
+
+  const handleRetryRoute = async () => {
+    if (!stops || stops.length < 2) return;
+    setRouteStatus('loading');
+    const coords = await fetchRoadSnappedRoute(stops, true);
+    if (coords) {
+      setRouteLine(coords);
+      setRouteStatus('ok');
+    } else {
+      setRouteLine([]);
+      setRouteStatus('failed');
+    }
+  };
 
   const toggleLocation = () => {
     if (userLocation) {
@@ -195,7 +228,7 @@ export default function TrackBus() {
     }
   };
 
-  const mapCenter = trip?.current_location ? [trip.current_location.lat, trip.current_location.lng] : ROUTE_COORDS[0];
+  const mapCenter = trip?.current_location ? [trip.current_location.lat, trip.current_location.lng] : (stops.length > 0 ? [stops[0].latitude, stops[0].longitude] : [22.7196, 75.8577]);
 
   return (
     <div className="h-dvh bg-[#030712] text-white flex flex-col relative overflow-hidden">
@@ -218,12 +251,23 @@ export default function TrackBus() {
             attribution='&copy; Map tiles'
           />
           
-          {/* Draw Route Polyline */}
-          <Polyline positions={ROUTE_COORDS} color="#3b82f6" weight={5} opacity={0.8} dashArray="10, 10" />
+          {/* Draw Route Polyline only when valid road geometry exists */}
+          {routeStatus === 'ok' && routeLine.length > 0 && (
+            <Polyline positions={routeLine} color="#3b82f6" weight={5} opacity={0.8} />
+          )}
           
           {/* Draw Origin/Destination Stops */}
-          <Marker position={ROUTE_COORDS[0]} icon={createOriginIcon()} />
-          <Marker position={ROUTE_COORDS[ROUTE_COORDS.length - 1]} icon={createDestinationIcon()} />
+          {stops.length > 0 && (
+             <Marker position={[stops[0].latitude, stops[0].longitude]} icon={createOriginIcon()} />
+          )}
+          {stops.length > 1 && (
+             <Marker position={[stops[stops.length - 1].latitude, stops[stops.length - 1].longitude]} icon={createDestinationIcon()} />
+          )}
+
+          {/* Draw Intermediate Stops */}
+          {stops.length > 2 && stops.slice(1, -1).map((stop) => (
+             <Marker key={stop.$id} position={[stop.latitude, stop.longitude]} icon={L.divIcon({ className: 'bg-white rounded-full border-[2px] border-blue-500 shadow-md', iconSize: [12, 12] })} />
+          ))}
 
           {/* Draw Live Bus */}
           {!loading && trip?.current_location && (
@@ -254,6 +298,25 @@ export default function TrackBus() {
           </button>
         </div>
       </header>
+
+      {/* Status banner for routing state */}
+      {routeStatus === 'failed' && (
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[500] bg-slate-900/90 border border-amber-500/40 text-amber-300 px-4 py-2 rounded-full text-xs font-semibold shadow-2xl flex items-center gap-3 pointer-events-auto backdrop-blur-md">
+          <span>⚠️ Route temporarily unavailable</span>
+          <button 
+            onClick={handleRetryRoute}
+            className="px-2.5 py-0.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/30 rounded-full font-bold transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+      {routeStatus === 'loading' && (
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[500] bg-slate-900/80 border border-white/10 text-slate-300 px-3.5 py-1.5 rounded-full text-xs font-medium shadow-lg flex items-center gap-2 pointer-events-none backdrop-blur-md">
+          <div className="w-2 h-2 rounded-full bg-blue-400 animate-ping"></div>
+          <span>Loading road route...</span>
+        </div>
+      )}
 
       {/* Floating Action Buttons */}
       <motion.div 

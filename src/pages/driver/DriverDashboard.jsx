@@ -5,6 +5,7 @@ import { Menu, User as UserIcon, Home, Clock, Play } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSidebar } from '../../contexts/SidebarContext';
 import { solarch } from '../../lib/solarch';
+import AuthRequiredModal from '../../components/AuthRequiredModal';
 
 export default function DriverDashboard() {
   const { user, requireDriverApproval } = useAuth();
@@ -12,30 +13,43 @@ export default function DriverDashboard() {
   const navigate = useNavigate();
   const [assignedTrip, setAssignedTrip] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
+  const isRealDriver = user && (user.role || '').toUpperCase() === 'DRIVER';
 
   useEffect(() => {
-    // If Admin requires approval and driver is PENDING, block them
-    if (requireDriverApproval && user?.approval_status === 'PENDING') {
-      navigate('/driver/pending', { replace: true });
-      return;
-    }
+    // Only enforce setup & approval redirects for actual DRIVER accounts
+    if (isRealDriver) {
+      if (requireDriverApproval && user?.approval_status === 'PENDING') {
+        navigate('/driver/pending', { replace: true });
+        return;
+      }
 
-    // If the driver hasn't completed their profile, force them to onboarding
-    if (user && (!user.name || !user.phone || !user.assigned_bus)) {
-      navigate('/driver/setup', { replace: true });
+      if (!user.name || !user.phone || !user.assigned_bus) {
+        navigate('/driver/setup', { replace: true });
+      }
     }
-  }, [user, requireDriverApproval, navigate]);
+  }, [user, requireDriverApproval, isRealDriver, navigate]);
 
-  // Fetch assigned trip for this driver
+  // Fetch assigned trip for this driver or a sample trip for view-only exploration
   useEffect(() => {
     const fetchTrip = async () => {
       try {
-        const response = await solarch.db.collection('trips').get({
-          filter: { bus_number: user?.assigned_bus },
-          limit: 1
-        });
-        
-        const docs = response?.items || response?.documents || [];
+        let docs = [];
+        if (user?.assigned_bus) {
+          const response = await solarch.db.collection('trips').get({
+            filter: { bus_number: user.assigned_bus },
+            limit: 1
+          });
+          docs = response?.items || response?.documents || [];
+        }
+
+        if (docs.length === 0) {
+          // In view-only mode or if driver has no bus, fetch any active trip as a demonstration
+          const anyResponse = await solarch.db.collection('trips').get({ limit: 1 });
+          docs = anyResponse?.items || anyResponse?.documents || [];
+        }
+
         if (docs.length > 0) {
           setAssignedTrip(docs[0]);
         } else {
@@ -47,18 +61,20 @@ export default function DriverDashboard() {
         setLoading(false);
       }
     };
-    if (user?.email) {
-      fetchTrip();
-    } else {
-      setLoading(false);
-    }
+
+    fetchTrip();
   }, [user]);
 
   const handleStartTrip = async () => {
+    if (!isRealDriver) {
+      setAuthModalOpen(true);
+      return;
+    }
+
     if (!assignedTrip) return;
     try {
       if (assignedTrip.status !== 'IN_PROGRESS') {
-        await solarch.db.collection('trips').update(assignedTrip.$id, {
+        await solarch.db.collection('trips').update(assignedTrip.$id || assignedTrip.id, {
           status: 'IN_PROGRESS',
           start_time: new Date().toISOString()
         });
@@ -83,7 +99,9 @@ export default function DriverDashboard() {
 
       <div className="flex-1 overflow-y-auto pb-24 relative z-10 px-5 pt-12">
         <header className="flex items-center justify-between mb-8">
-          <div className="flex-1"></div>
+          <button onClick={openSidebar} className="p-2 -ml-2 text-slate-400 hover:text-white transition-colors">
+            <Menu size={24} />
+          </button>
           <div onClick={() => navigate('/profile')} className="w-10 h-10 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center overflow-hidden cursor-pointer">
              <img src={`https://ui-avatars.com/api/?name=${capitalizedName}&background=0D8ABC&color=fff`} alt="Profile" className="w-full h-full object-cover" />
           </div>
@@ -177,6 +195,13 @@ export default function DriverDashboard() {
           </button>
         </div>
       </div>
+
+      <AuthRequiredModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        requiredRole="Driver"
+        actionName="starting or managing trips"
+      />
     </div>
   );
 }

@@ -95,7 +95,7 @@ export default function AdminDashboard() {
         >
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-[14px] font-bold text-white tracking-wide">Live Overview</h3>
-            <button onClick={() => navigate('/admin/live-map')} className="text-[12px] font-medium text-blue-400 hover:text-blue-300">View Map {'>'}</button>
+            <button onClick={() => navigate('/admin/map')} className="text-[12px] font-medium text-blue-400 hover:text-blue-300">View Map {'>'}</button>
           </div>
           <div className="h-[120px] w-full flex items-end justify-between gap-1 relative opacity-80">
              {[40, 70, 45, 90, 65, 80, 50, 100, 75, 85, 60, 40].map((h, i) => (
@@ -157,7 +157,7 @@ export default function AdminDashboard() {
             <Bus size={22} />
             <span className="text-[10px] font-medium">Buses</span>
           </button>
-          <button onClick={() => navigate('/admin/live-map')} className="flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-colors">
+          <button onClick={() => navigate('/admin/map')} className="flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-colors">
             <MapIcon size={22} />
             <span className="text-[10px] font-medium">Live Map</span>
           </button>

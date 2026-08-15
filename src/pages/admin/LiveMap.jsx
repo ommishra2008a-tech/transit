@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Filter, Bus, Navigation, Map as MapIcon } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import { solarch } from '../../lib/solarch';
+import { fetchRoadSnappedRoute } from '../../lib/osrm';
 
 // Indore Coordinates
 const INDORE_CENTER = [22.7196, 75.8577];
@@ -86,6 +87,12 @@ export default function LiveMap() {
   const navigate = useNavigate();
   const [buses, setBuses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [mapStyle, setMapStyle] = useState('satellite');
+
+  const [selectedRouteId, setSelectedRouteId] = useState(null);
+  const [routeLine, setRouteLine] = useState([]);
+  const [stops, setStops] = useState([]);
+  const [routeStatus, setRouteStatus] = useState('loading'); // 'loading', 'ok', 'failed'
 
   // Fetch real active trips for map
   useEffect(() => {
@@ -103,6 +110,56 @@ export default function LiveMap() {
     };
     fetchBuses();
   }, []);
+
+  // Fetch and draw route when a bus is selected
+  useEffect(() => {
+    const fetchRoute = async () => {
+      if (!selectedRouteId) {
+        setRouteLine([]);
+        setStops([]);
+        return;
+      }
+      setRouteStatus('loading');
+      try {
+        const stopsRes = await solarch.db.collection('stops').get({
+          filter: { route_id: selectedRouteId },
+          limit: 100
+        });
+        if (stopsRes && stopsRes.items) {
+          const sortedStops = stopsRes.items.sort((a, b) => a.stop_order - b.stop_order);
+          setStops(sortedStops);
+          
+          const coords = await fetchRoadSnappedRoute(sortedStops);
+          if (coords) {
+            setRouteLine(coords);
+            setRouteStatus('ok');
+          } else {
+            console.warn("Road routing unavailable from OSRM for admin map.");
+            setRouteLine([]);
+            setRouteStatus('failed');
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch route for selected bus", err);
+        setRouteLine([]);
+        setRouteStatus('failed');
+      }
+    };
+    fetchRoute();
+  }, [selectedRouteId]);
+
+  const handleRetryRoute = async () => {
+    if (!stops || stops.length < 2) return;
+    setRouteStatus('loading');
+    const coords = await fetchRoadSnappedRoute(stops, true);
+    if (coords) {
+      setRouteLine(coords);
+      setRouteStatus('ok');
+    } else {
+      setRouteLine([]);
+      setRouteStatus('failed');
+    }
+  };
 
   const runningCount = buses.filter(b => b.status === 'IN_PROGRESS').length;
   const scheduledCount = buses.filter(b => b.status === 'SCHEDULED').length;
@@ -126,6 +183,24 @@ export default function LiveMap() {
             attribution='&copy; Map tiles'
           />
           
+          {/* Draw Route Polyline only when valid road geometry exists */}
+          {routeStatus === 'ok' && routeLine.length > 0 && (
+            <Polyline positions={routeLine} color="#3b82f6" weight={5} opacity={0.8} />
+          )}
+
+          {/* Draw Origin/Destination Stops */}
+          {stops.length > 0 && (
+             <Marker position={[stops[0].latitude, stops[0].longitude]} icon={L.divIcon({ className: 'custom-origin-marker', html: '<div class="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-md"></div>', iconSize: [16, 16] })} />
+          )}
+          {stops.length > 1 && (
+             <Marker position={[stops[stops.length - 1].latitude, stops[stops.length - 1].longitude]} icon={L.divIcon({ className: 'custom-dest-marker', html: '<div class="w-4 h-4 rounded-full bg-red-500 border-2 border-white shadow-md"></div>', iconSize: [16, 16] })} />
+          )}
+
+          {/* Draw Intermediate Stops */}
+          {stops.length > 2 && stops.slice(1, -1).map((stop) => (
+             <Marker key={stop.$id} position={[stop.latitude, stop.longitude]} icon={L.divIcon({ className: 'bg-white rounded-full border-[2px] border-blue-500 shadow-md', iconSize: [10, 10] })} />
+          ))}
+
           {/* Render real map markers for all buses */}
           {!loading && buses.map((bus) => {
             if (!bus.current_location || !bus.current_location.lat) return null;
@@ -134,6 +209,7 @@ export default function LiveMap() {
                 key={bus.$id} 
                 position={[bus.current_location.lat, bus.current_location.lng]}
                 icon={createAdminBusIcon(bus.bus_number, bus.status)}
+                eventHandlers={{ click: () => setSelectedRouteId(bus.route_id) }}
               >
                 <Popup className="custom-dark-popup">
                   <BusPopupContent bus={bus} />
@@ -146,6 +222,17 @@ export default function LiveMap() {
 
       {/* Header overlays */}
       <header className="relative z-10 px-5 pt-12 pb-4 pointer-events-none">
+        {routeStatus === 'failed' && (
+          <div className="absolute top-28 left-1/2 -translate-x-1/2 z-[500] bg-slate-900/90 border border-amber-500/40 text-amber-300 px-4 py-2 rounded-full text-xs font-semibold shadow-2xl flex items-center gap-3 pointer-events-auto backdrop-blur-md">
+            <span>⚠️ Route temporarily unavailable</span>
+            <button 
+              onClick={handleRetryRoute}
+              className="px-2.5 py-0.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/30 rounded-full font-bold transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
         <div className="flex items-center gap-4 mb-4 pointer-events-auto">
           <button onClick={() => navigate(-1)} className="w-12 h-12 rounded-full bg-[#0b101a]/90 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors shadow-lg">
             <ArrowLeft size={24} />

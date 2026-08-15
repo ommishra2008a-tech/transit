@@ -10,12 +10,24 @@ export default function BusDetails() {
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch real trip details
+  const [realStops, setRealStops] = useState([]);
+
+  // Fetch real trip details and stops
   useEffect(() => {
     const init = async () => {
       try {
         const tripDoc = await solarch.db.collection('trips').getById(id);
         setTrip(tripDoc);
+        if (tripDoc?.route_id) {
+          const stopsRes = await solarch.db.collection('stops').get({
+            filter: { route_id: tripDoc.route_id },
+            limit: 50
+          });
+          if (stopsRes?.items?.length > 0) {
+            const sorted = stopsRes.items.sort((a, b) => a.stop_order - b.stop_order);
+            setRealStops(sorted);
+          }
+        }
       } catch (err) {
         console.error('Failed to load trip', err);
       } finally {
@@ -25,8 +37,8 @@ export default function BusDetails() {
     init();
   }, [id]);
 
-  // Dummy stops for UI representation since stops collection might not be populated in this demo
-  const mockStops = [
+  // Fallback stops if stops collection is empty
+  const defaultStops = [
     { name: 'Airport Road', time: '09:10 AM', status: 'Completed' },
     { name: 'Janjeerwala Square', time: '09:18 AM', status: 'Completed' },
     { name: 'Malhar Mega Mall', time: '09:24 AM', status: 'Current Stop' },
@@ -34,6 +46,14 @@ export default function BusDetails() {
     { name: 'Scheme No. 54', time: '09:35 AM', status: 'Upcoming' },
     { name: 'Vijay Nagar', time: '09:40 AM', status: 'Upcoming' }
   ];
+
+  const displayStops = realStops.length > 0 
+    ? realStops.map((s, idx) => ({
+        name: s.stop_name || `Stop ${idx + 1}`,
+        time: idx === 0 ? 'Start' : idx === realStops.length - 1 ? 'End' : '--:--',
+        status: idx === 0 ? 'Completed' : idx === 1 ? 'Current Stop' : 'Upcoming'
+      }))
+    : defaultStops;
 
   return (
     <div className="h-dvh bg-[#030712] text-white flex flex-col relative overflow-hidden">
@@ -107,7 +127,7 @@ export default function BusDetails() {
             {/* Vertical Line */}
             <div className="absolute left-[15px] top-[10px] bottom-[30px] w-[2px] bg-white/10"></div>
             
-            {mockStops.map((stop, index) => {
+            {displayStops.map((stop, index) => {
               const isCompleted = stop.status === 'Completed';
               const isCurrent = stop.status === 'Current Stop';
               const isUpcoming = stop.status === 'Upcoming';

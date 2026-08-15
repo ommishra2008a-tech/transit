@@ -120,6 +120,32 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const signup = useCallback(async (name, email, password, passwordConfirm, requestAdmin = false) => {
+    setError('');
+    setLoading(true);
+    try {
+      // 1. Create the user. The backend will forcibly set role=PASSENGER.
+      await fetch(`${solarch.db.baseUrl}/api/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          passwordConfirm,
+          admin_request: requestAdmin ? 'PENDING' : 'NONE'
+        })
+      });
+      
+      // 2. Automatically log them in after successful creation
+      return await login(email, password);
+    } catch (err) {
+      setError(err.message || 'Failed to create account. Please check your information.');
+      setLoading(false);
+      throw err;
+    }
+  }, [login]);
+
   const logout = useCallback(async () => {
     try {
       await solarch.auth.logout();
@@ -147,6 +173,7 @@ export function AuthProvider({ children }) {
     loading,
     error,
     login,
+    signup,
     logout,
     updateUser,
     clearError,
