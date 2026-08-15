@@ -347,6 +347,21 @@ npm run build
 | **Phase 6** | System Integration & End-to-End Verification | VERIFIED | 🟢 PASS |
 | **Phase 7** | Production Readiness & Deployment Verification | VERIFIED | 🟢 PASS |
 | **Phase 8** | Staging & Pilot Verification | VERIFIED | 🟢 **31/31 PASS** |
+| **Phase 9** | System Stability, Routing Fixes & UI Polish | VERIFIED | 🟢 PASS |
+
+---
+
+## 🐛 Phase 9 System Stability & UI Polish
+
+### 1. Passenger Dashboard White Screen Fix (P0)
+- **Problem**: React threw `Maximum update depth exceeded` when un-normalized legacy roles caused an infinite routing ping-pong between `Login.jsx` and `ProtectedRoute`.
+- **Fix**: Implemented strict role normalization `(role || 'PASSENGER').toUpperCase()`. Bounced invalid roles natively to `/passenger`, neutralizing the routing collision and stabilizing React Router tree.
+
+### 2. Login UI Polish
+- **Enhancement**: Added a robust password visibility toggle (`Eye`/`EyeOff` via Lucide React) directly integrated into the login inputs for better accessibility.
+
+### 3. Map Cleanup
+- **Enhancement**: Conducted a full sweep of map views (`LiveMap.jsx`, `ActiveTrip.jsx`) and stripped away inert dummy action buttons (e.g., non-functional target scopes, filter icons) to maximize the clean map real estate for tracking purposes.
 
 ---
 

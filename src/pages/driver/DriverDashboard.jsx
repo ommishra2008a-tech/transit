@@ -1,201 +1,182 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Play, Bus as BusIcon, Navigation, ShieldAlert, Route as RouteIcon, Radio, CheckCircle2, Navigation2 } from 'lucide-react';
+import { Menu, User as UserIcon, Home, Clock, Play } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { getAssignedBus } from '../../services/bus.service';
-import { getStopsByRoute } from '../../services/route.service';
-import { getActiveTrip, startTrip } from '../../services/trip.service';
-import StatusBadge from '../../components/StatusBadge/StatusBadge';
-import StopList from '../../components/StopList/StopList';
-import PageContainer from '../../components/layout/PageContainer';
-import PageHeader from '../../components/layout/PageHeader';
-import Button from '../../components/ui/Button';
+import { useSidebar } from '../../contexts/SidebarContext';
+import { solarch } from '../../lib/solarch';
 
 export default function DriverDashboard() {
-  const { user } = useAuth();
+  const { user, requireDriverApproval } = useAuth();
+  const { openSidebar } = useSidebar();
   const navigate = useNavigate();
-  const [bus, setBus] = useState(null);
-  const [stops, setStops] = useState([]);
-  const [activeTrip, setActiveTrip] = useState(null);
+  const [assignedTrip, setAssignedTrip] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [starting, setStarting] = useState(false);
 
   useEffect(() => {
-    loadData();
-  }, [user]);
+    // If Admin requires approval and driver is PENDING, block them
+    if (requireDriverApproval && user?.approval_status === 'PENDING') {
+      navigate('/driver/pending', { replace: true });
+      return;
+    }
 
-  async function loadData() {
-    try {
-      const b = await getAssignedBus(user.id);
-      setBus(b);
-      if (b?.route_id) {
-        const s = await getStopsByRoute(b.route_id);
-        setStops(s || []);
+    // If the driver hasn't completed their profile, force them to onboarding
+    if (user && (!user.name || !user.phone || !user.assigned_bus)) {
+      navigate('/driver/setup', { replace: true });
+    }
+  }, [user, requireDriverApproval, navigate]);
+
+  // Fetch assigned trip for this driver
+  useEffect(() => {
+    const fetchTrip = async () => {
+      try {
+        const response = await solarch.db.collection('trips').get({
+          filter: { bus_number: user?.assigned_bus },
+          limit: 1
+        });
+        
+        const docs = response?.items || response?.documents || [];
+        if (docs.length > 0) {
+          setAssignedTrip(docs[0]);
+        } else {
+          setAssignedTrip(null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch assigned trip:', err);
+      } finally {
+        setLoading(false);
       }
-      const trip = await getActiveTrip(user.id);
-      setActiveTrip(trip);
-      if (trip) navigate('/driver/trip', { replace: true });
-    } catch (e) {
-      console.error(e);
-    } finally {
+    };
+    if (user?.email) {
+      fetchTrip();
+    } else {
       setLoading(false);
     }
-  }
+  }, [user]);
 
-  async function handleStartTrip() {
-    if (!bus) return;
-    setStarting(true);
+  const handleStartTrip = async () => {
+    if (!assignedTrip) return;
     try {
-      const trip = await startTrip(bus.id, user.id, bus.route_id);
-      setActiveTrip(trip);
+      if (assignedTrip.status !== 'IN_PROGRESS') {
+        await solarch.db.collection('trips').update(assignedTrip.$id, {
+          status: 'IN_PROGRESS',
+          start_time: new Date().toISOString()
+        });
+      }
       navigate('/driver/trip');
-    } catch (e) {
-      console.error(e);
-      alert('Failed to start trip: ' + e.message);
-    } finally {
-      setStarting(false);
+    } catch (err) {
+      console.error('Failed to start trip', err);
+      alert('Could not start trip. Check connection.');
     }
-  }
+  };
 
-  if (loading) {
-    return (
-      <PageContainer narrow>
-        <div className="skeleton h-28 w-full rounded-3xl" />
-        <div className="grid grid-cols-2 gap-3">
-          <div className="skeleton h-32 rounded-2xl" />
-          <div className="skeleton h-32 rounded-2xl" />
-        </div>
-        <div className="skeleton h-60 w-full rounded-3xl" />
-      </PageContainer>
-    );
-  }
+  const userName = user?.name || user?.email?.split('@')[0] || 'Driver';
+  const capitalizedName = userName.charAt(0).toUpperCase() + userName.slice(1);
 
-  const route = bus?.expand?.route_id;
-  const isTripActive = bus?.status === 'RUNNING' || activeTrip;
+  const isTripActive = assignedTrip?.status === 'IN_PROGRESS';
 
   return (
-    <PageContainer narrow>
-      {/* Hero Banner */}
-      <PageHeader
-        title={`Welcome, ${user?.name || 'Driver'} 👋`}
-        subtitle="Assigned vehicle console & live telemetry broadcast controls."
-        badge="Driver Operational Console"
-        badgeIcon={Navigation2}
-        statusPill={
-          <div className="px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/80 text-xs font-mono font-bold text-slate-200 flex items-center gap-1.5 backdrop-blur-md">
-            <Radio size={12} className={isTripActive ? 'text-emerald-400 animate-pulse' : 'text-slate-400'} />
-            <span>{isTripActive ? 'BROADCASTING' : 'STANDBY'}</span>
-          </div>
-        }
-      />
+    <div className="h-dvh bg-[#030712] text-white flex flex-col relative overflow-hidden">
+      {/* Background Ambience */}
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/10 via-[#030712] to-[#030712] pointer-events-none" />
+      <div className="fixed inset-0 opacity-[0.02] bg-[url('https://images.unsplash.com/photo-1555626906-fcf10d6851b4?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center pointer-events-none mix-blend-screen"></div>
 
-      {!bus ? (
-        <div className="bg-white/95 dark:bg-slate-900/90 rounded-3xl p-8 text-center border border-slate-200/80 dark:border-slate-800 shadow-sm backdrop-blur-md">
-          <ShieldAlert size={40} className="text-amber-500 mx-auto mb-3 animate-pulse" />
-          <h3 className="text-slate-900 dark:text-white font-extrabold text-lg">No Vehicle Assigned</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
-            Your account is not assigned to a bus vehicle. Contact Fleet Operations Admin for assignment.
-          </p>
-        </div>
-      ) : (
-        <motion.div
+      <div className="flex-1 overflow-y-auto pb-24 relative z-10 px-5 pt-12">
+        <header className="flex items-center justify-between mb-8">
+          <div className="flex-1"></div>
+          <div onClick={() => navigate('/profile')} className="w-10 h-10 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center overflow-hidden cursor-pointer">
+             <img src={`https://ui-avatars.com/api/?name=${capitalizedName}&background=0D8ABC&color=fff`} alt="Profile" className="w-full h-full object-cover" />
+          </div>
+        </header>
+
+        {/* Greeting Section */}
+        <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="space-y-4"
+          className="mb-8"
         >
-          {/* Side-by-Side Assigned Bus & Route Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Assigned Bus Card */}
-            <div className="bg-white/95 dark:bg-slate-900/90 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs relative backdrop-blur-md">
-              <div className="absolute top-4 right-4">
-                <StatusBadge status={bus.status} />
-              </div>
-
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold border border-blue-100 dark:border-blue-900">
-                  <BusIcon size={18} />
-                </div>
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">ASSIGNED VEHICLE</span>
-              </div>
-
-              <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">
-                {bus.bus_number}
-              </h3>
-              <p className="text-xs font-mono font-bold text-slate-400 dark:text-slate-500 mt-1">
-                {bus.registration_number}
-              </p>
-            </div>
-
-            {/* Current Route Card */}
-            <div className="bg-white/95 dark:bg-slate-900/90 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs backdrop-blur-md">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold border border-emerald-100 dark:border-emerald-900">
-                  <RouteIcon size={18} />
-                </div>
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">ASSIGNED ROUTE</span>
-              </div>
-
-              {route ? (
-                <>
-                  <p className="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">
-                    {route.start_location} <span className="text-blue-500">→</span> {route.end_location}
-                  </p>
-                  <p className="text-xs font-mono text-slate-400 dark:text-slate-500 mt-1">
-                    {stops.length} Station Stops
-                  </p>
-                </>
-              ) : (
-                <p className="text-xs text-slate-400 italic">No route assigned</p>
-              )}
-            </div>
-          </div>
-
-          {/* Route Stops Sequence */}
-          {stops.length > 0 && (
-            <div className="bg-white/95 dark:bg-slate-900/90 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden backdrop-blur-md">
-              <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Navigation size={16} className="text-blue-600 dark:text-blue-400" />
-                  <h3 className="text-xs font-mono font-bold text-slate-900 dark:text-white uppercase tracking-wider">Route Station Timeline</h3>
-                </div>
-                <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 uppercase border border-slate-200 dark:border-slate-700">
-                  {stops.length} STATIONS
-                </span>
-              </div>
-
-              <div className="p-5">
-                <StopList stops={stops} currentStopIndex={0} />
-              </div>
-            </div>
-          )}
-
-          {/* START TRIP Action CTA */}
-          <div className="pt-2">
-            <Button
-              variant={isTripActive ? 'secondary' : 'success'}
-              size="xl"
-              onClick={handleStartTrip}
-              disabled={starting || isTripActive}
-              loading={starting}
-              className="w-full text-base font-extrabold uppercase tracking-wider shadow-lg"
-            >
-              {isTripActive ? (
-                <>
-                  <CheckCircle2 size={20} />
-                  Trip Active (Broadcasting Live GPS)
-                </>
-              ) : (
-                <>
-                  <Play size={20} className="fill-current" />
-                  START TRIP & STREAM GPS
-                </>
-              )}
-            </Button>
-          </div>
+          <p className="text-slate-400 text-[13px] font-medium tracking-wide uppercase mb-1">Good Morning,</p>
+          <h2 className="text-[28px] font-bold tracking-tight text-white flex items-center gap-2">
+            {capitalizedName} <span className="text-2xl animate-waving-hand origin-bottom-right inline-block">👋</span>
+          </h2>
         </motion.div>
-      )}
-    </PageContainer>
+
+        {/* Assigned Trip Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-[#0b101a]/80 backdrop-blur-xl border border-white/10 rounded-[24px] p-6 shadow-xl relative overflow-hidden"
+        >
+          {/* subtle glow behind card */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[40px] pointer-events-none"></div>
+
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold mb-1">Assigned Bus</p>
+              <h3 className="text-[22px] font-bold text-white tracking-wide">{assignedTrip ? assignedTrip.bus_number : 'No Trip Assigned'}</h3>
+              <p className="text-[13px] text-slate-400 mt-0.5">{assignedTrip ? assignedTrip.route_id : 'Please contact admin for a schedule.'}</p>
+            </div>
+            {/* Minimal Bus Graphic */}
+            <div className="w-16 h-12 bg-blue-500/10 rounded-xl border border-blue-500/20 flex items-center justify-center">
+              <img src="/vite.svg" alt="Bus" className="w-8 opacity-50 grayscale" />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between py-4 border-t border-b border-white/5 mb-6">
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Start Time</span>
+              <span className="text-[14px] font-bold text-white">{assignedTrip?.start_time ? new Date(assignedTrip.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'TBD'}</span>
+            </div>
+            <div className="flex flex-col text-right">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Status</span>
+              <span className="text-[12px] font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">{assignedTrip?.status || 'Waiting'}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 mb-6">
+            <div className="flex flex-col items-center justify-center p-3">
+              <span className="text-[20px] font-bold text-white">0</span>
+              <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mt-0.5">km Dist</span>
+            </div>
+            <div className="flex flex-col items-center justify-center p-3">
+              <span className="text-[20px] font-bold text-white">0</span>
+              <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mt-0.5">Stops</span>
+            </div>
+            <div className="flex flex-col items-center justify-center p-3">
+              <span className="text-[20px] font-bold text-white">00:00</span>
+              <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mt-0.5">Duration</span>
+            </div>
+          </div>
+
+          <button 
+            onClick={handleStartTrip}
+            disabled={loading || !assignedTrip}
+            className={`w-full h-[56px] text-white font-bold text-[16px] rounded-2xl shadow-[0_8px_20px_rgba(16,185,129,0.3)] hover:shadow-[0_8px_25px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-2 group ${!assignedTrip ? 'bg-slate-600 opacity-50 cursor-not-allowed shadow-none hover:shadow-none' : isTripActive ? 'bg-blue-600' : 'bg-gradient-to-r from-emerald-600 to-emerald-500'}`}
+          >
+            <Play fill="currentColor" size={16} className="group-hover:scale-110 transition-transform" />
+            <span>{isTripActive ? 'Resume Trip' : 'Start Trip'}</span>
+          </button>
+        </motion.div>
+      </div>
+
+      {/* Bottom Navigation Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#070b13]/90 backdrop-blur-2xl border-t border-white/5 pb-safe pt-2 px-6">
+        <div className="flex items-center justify-around h-16 max-w-md mx-auto">
+          <button onClick={() => navigate('/driver')} className="flex flex-col items-center gap-1.5 text-blue-500">
+            <Home size={22} className="drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+            <span className="text-[10px] font-semibold">Dashboard</span>
+          </button>
+          <button onClick={() => navigate('/driver/trip')} className="flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-colors">
+            <Clock size={22} />
+            <span className="text-[10px] font-medium">My Trips</span>
+          </button>
+          <button onClick={() => navigate('/profile')} className="flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-colors">
+            <UserIcon size={22} />
+            <span className="text-[10px] font-medium">Profile</span>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

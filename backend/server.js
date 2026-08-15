@@ -58,6 +58,7 @@ app.onBootstrap.bindFunc(async (e) => {
       new TextField({ name: 'name', required: false }),
       new TextField({ name: 'phone', required: false }),
       new SelectField({ name: 'role', values: ['PASSENGER', 'DRIVER', 'ADMIN'], required: false }),
+      new SelectField({ name: 'approval_status', values: ['PENDING', 'APPROVED'], required: false }),
     ]
   }));
 
@@ -120,7 +121,7 @@ app.onBootstrap.bindFunc(async (e) => {
     type: 'base',
     listRule: '',
     viewRule: '',
-    createRule: '@request.auth.role = "DRIVER" || @request.auth.role = "ADMIN"',
+    createRule: '@request.auth.role = "ADMIN" || (@request.auth.role = "DRIVER" && @request.auth.approval_status = "APPROVED")',
     updateRule: '@request.auth.role = "ADMIN" || (@request.auth.role = "DRIVER" && driver_id = @request.auth.id)',
     deleteRule: '@request.auth.role = "ADMIN"',
     fields: [
@@ -139,8 +140,8 @@ app.onBootstrap.bindFunc(async (e) => {
     type: 'base',
     listRule: '',
     viewRule: '',
-    createRule: '@request.auth.role = "DRIVER" || @request.auth.role = "ADMIN"',
-    updateRule: '@request.auth.role = "DRIVER" || @request.auth.role = "ADMIN"',
+    createRule: '@request.auth.role = "ADMIN" || (@request.auth.role = "DRIVER" && @request.auth.approval_status = "APPROVED")',
+    updateRule: '@request.auth.role = "ADMIN" || (@request.auth.role = "DRIVER" && @request.auth.approval_status = "APPROVED")',
     deleteRule: '@request.auth.role = "ADMIN"',
     fields: [
       new RelationField({ name: 'bus_id', collectionName: 'buses', required: true }),
@@ -159,13 +160,34 @@ app.onBootstrap.bindFunc(async (e) => {
     const usersCol = await appInstance.findCollectionByNameOrId('users');
     if (usersCol) {
       const db = appInstance.db().getDataDB();
-      db.prepare(`UPDATE _r_${usersCol.id} SET role = 'ADMIN' WHERE email = 'admin@transit.dev'`).run();
-      db.prepare(`UPDATE _r_${usersCol.id} SET role = 'DRIVER' WHERE email = 'driver@transit.dev'`).run();
-      db.prepare(`UPDATE _r_${usersCol.id} SET role = 'PASSENGER' WHERE email = 'passenger@transit.dev' AND (role IS NULL OR role = '')`).run();
+      db.prepare(`UPDATE _r_${usersCol.id} SET role = 'ADMIN', approval_status = 'APPROVED' WHERE email = 'admin@transit.dev'`).run();
+      db.prepare(`UPDATE _r_${usersCol.id} SET role = 'DRIVER', approval_status = 'APPROVED' WHERE email = 'driver@transit.dev'`).run();
+      db.prepare(`UPDATE _r_${usersCol.id} SET role = 'PASSENGER', approval_status = 'APPROVED' WHERE email = 'passenger@transit.dev' AND (role IS NULL OR role = '')`).run();
     }
   } catch (err) {}
 
   await appInstance.reloadCachedCollections();
+});
+
+// Enforce 10-Admin limit hook
+app.onRecordCreate.bindFunc(async (e) => {
+  const record = e.record;
+  if (!record) return;
+  const col = record.collection();
+  if (col && col.name === 'users') {
+    if (record.get('role') === 'ADMIN') {
+      const db = e.app.db().getDataDB();
+      const collection = await e.app.findCollectionByNameOrId('users');
+      const result = db.prepare(`SELECT COUNT(*) as cnt FROM _r_${collection.id} WHERE role = 'ADMIN'`).get();
+      if (result && result.cnt >= 10) {
+        throw new Error("Maximum limit of 10 Admins reached.");
+      }
+    }
+    // Default approval status for drivers if not set explicitly
+    if (record.get('role') === 'DRIVER' && !record.get('approval_status')) {
+      record.set('approval_status', 'PENDING');
+    }
+  }
 });
 
 // Root URL redirect GET / -> /_/ (Solarch Admin UI)
