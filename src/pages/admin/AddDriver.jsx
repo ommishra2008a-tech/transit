@@ -36,7 +36,13 @@ export default function AddDriver() {
     setLoading(true);
     
     try {
-      const initialPassword = formData.password || 'InitialDriverPass@123';
+      const initialPassword = formData.password.trim();
+      if (!initialPassword || initialPassword.length < 8) {
+        alert('Password is required and must be at least 8 characters long.');
+        setLoading(false);
+        return;
+      }
+
       // Save to Solarch driver/users collection
       await solarch.db.collection('users').create({
         name: formData.name,
@@ -153,15 +159,15 @@ export default function AddDriver() {
                   />
                 </div>
 
-                {/* Initial Password (Optional) */}
+                {/* Initial Password (Required) */}
                 <div className="relative group">
                   <div className="absolute left-4 top-[38px] text-slate-500 group-focus-within:text-blue-500 transition-colors pointer-events-none">
                     <Lock size={18} />
                   </div>
-                  <label className="text-[12px] font-medium text-slate-400 mb-1.5 block px-1 uppercase tracking-wider">Initial Password (Optional)</label>
+                  <label className="text-[12px] font-medium text-slate-400 mb-1.5 block px-1 uppercase tracking-wider">Initial Password (Min 8 characters)</label>
                   <input
-                    id="password" value={formData.password} onChange={handleChange}
-                    type="password" placeholder="Default: InitialDriverPass@123"
+                    id="password" required minLength={8} value={formData.password} onChange={handleChange}
+                    type="password" placeholder="•••••••• (At least 8 characters)"
                     className="w-full bg-[#030712] border border-white/10 text-white text-[14px] placeholder:text-slate-600 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 h-[52px] rounded-xl pl-11 pr-4 outline-none transition-all shadow-inner"
                   />
                 </div>

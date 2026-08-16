@@ -11,6 +11,9 @@ import {
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import express from 'express';
+import rateLimit from 'express-rate-limit';
+
+const isDev = process.env.NODE_ENV !== 'production';
 
 if (!process.env.SOLARCH_JWT_SECRET) {
   if (process.env.NODE_ENV === 'production') {
@@ -53,15 +56,15 @@ app.onBootstrap.bindFunc(async (e) => {
     }
   }
 
-  // 1. users (Auth collection) - Prevent role self-escalation
+  // 1. users (Auth collection) - Allow Admin to list/manage while restricting passengers/drivers to own record
   await ensureCollection(new Collection({
     name: 'users',
     type: 'auth',
-    listRule: 'id = @request.auth.id',
-    viewRule: 'id = @request.auth.id',
+    listRule: 'id = @request.auth.id || @request.auth.role = "ADMIN"',
+    viewRule: 'id = @request.auth.id || @request.auth.role = "ADMIN"',
     createRule: null,
-    updateRule: 'id = @request.auth.id',
-    deleteRule: 'id = @request.auth.id',
+    updateRule: 'id = @request.auth.id || @request.auth.role = "ADMIN"',
+    deleteRule: '@request.auth.role = "ADMIN"',
     fields: [
       new TextField({ name: 'name', required: false }),
       new TextField({ name: 'phone', required: false }),
@@ -164,23 +167,42 @@ app.onBootstrap.bindFunc(async (e) => {
 
   console.log('✅ Collections initialized!');
 
-  // Sync user roles in SQLite table
-  try {
-    const usersCol = await appInstance.findCollectionByNameOrId('users');
-    if (usersCol) {
-      const db = appInstance.db().getDataDB();
-      db.prepare(`UPDATE _r_${usersCol.id} SET role = 'ADMIN', approval_status = 'APPROVED' WHERE email = 'admin@transit.dev'`).run();
-      db.prepare(`UPDATE _r_${usersCol.id} SET role = 'DRIVER', approval_status = 'APPROVED' WHERE email = 'driver@transit.dev'`).run();
-      db.prepare(`UPDATE _r_${usersCol.id} SET role = 'PASSENGER', approval_status = 'APPROVED' WHERE email = 'passenger@transit.dev' AND (role IS NULL OR role = '')`).run();
-    }
-  } catch (err) { }
+  // FINDING-012 FIX: Dev-only role sync — NEVER runs in production
+  if (isDev) {
+    try {
+      const usersCol = await appInstance.findCollectionByNameOrId('users');
+      if (usersCol) {
+        const db = appInstance.db().getDataDB();
+        db.prepare(`UPDATE _r_${usersCol.id} SET role = 'ADMIN', approval_status = 'APPROVED' WHERE email = 'admin@transit.dev'`).run();
+        db.prepare(`UPDATE _r_${usersCol.id} SET role = 'DRIVER', approval_status = 'APPROVED' WHERE email = 'driver@transit.dev'`).run();
+        db.prepare(`UPDATE _r_${usersCol.id} SET role = 'PASSENGER', approval_status = 'APPROVED' WHERE email = 'passenger@transit.dev' AND (role IS NULL OR role = '')`).run();
+      }
+    } catch (err) { }
+  }
 
   await appInstance.reloadCachedCollections();
 });
 
 // Add bulletproof custom signup endpoint
 app.onServe.bindFunc((e) => {
-  // Middleware to protect user fields during PATCH
+  // FINDING-007 FIX: Rate limiting for auth endpoints
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 20, // 20 attempts per window
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { code: 429, message: 'Too many requests. Please try again later.' }
+  });
+  const signupLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 10, // 10 signups per hour
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { code: 429, message: 'Too many signup attempts. Please try again later.' }
+  });
+  e.router.post('/api/collections/users/auth-with-password', authLimiter);
+
+  // FINDING-001 FIX: Middleware to protect user fields during PATCH — no sensitive logging
   e.router.patch('/api/collections/users/records/:id', express.json(), (req, res, next) => {
     let isAdmin = false;
     const authHeader = req.headers.authorization;
@@ -194,18 +216,15 @@ app.onServe.bindFunc((e) => {
       } catch (err) {}
     }
 
-    console.log("MIDDLEWARE HIT! isAdmin:", isAdmin);
-    console.log("Original req.body:", req.body);
     if (!isAdmin && req.body) {
       delete req.body.role;
       delete req.body.approval_status;
       delete req.body.admin_request;
     }
-    console.log("Modified req.body:", req.body);
     next();
   });
 
-  e.router.post('/api/auth/signup', express.json(), async (req, res) => {
+  e.router.post('/api/auth/signup', signupLimiter, express.json(), async (req, res) => {
     try {
       const data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
       
@@ -259,7 +278,7 @@ app.onServe.bindFunc((e) => {
         }
       }));
     } catch (err) {
-      console.error("Signup error:", err);
+      if (isDev) console.error("Signup error:", err.message);
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ code: 500, message: "Failed to create user." }));
     }
@@ -361,7 +380,7 @@ app.onServe.bindFunc((e) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ code: 200, message: 'Admin request approved.' }));
     } catch (err) {
-      console.error('Approval Error:', err);
+      if (isDev) console.error('Approval Error:', err.message);
       res.writeHead(500, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ code: 500, message: 'Internal server error.' }));
     }
@@ -411,7 +430,60 @@ app.onServe.bindFunc((e) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ code: 200, message: 'Admin request rejected.' }));
     } catch (err) {
-      console.error('Rejection Error:', err);
+      if (isDev) console.error('Rejection Error:', err.message);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ code: 500, message: 'Internal server error.' }));
+    }
+  });
+
+  // FINDING-011 FIX: Dedicated admin driver approval endpoint
+  e.router.post('/api/admin/drivers/:id/approve', async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization || '';
+      const token = authHeader.replace('Bearer ', '').trim();
+      if (!token) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ code: 403, message: 'Forbidden. No token.' }));
+      }
+
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.SOLARCH_JWT_SECRET);
+      } catch (err) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ code: 403, message: 'Forbidden. Invalid token.' }));
+      }
+
+      const db = e.app.db().getDataDB();
+      const collection = await e.app.findCollectionByNameOrId('users');
+
+      const requester = db.prepare(`SELECT role FROM _r_${collection.id} WHERE id = ?`).get(decoded.id);
+      if (!requester || requester.role !== 'ADMIN') {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ code: 403, message: 'Forbidden. Admin privileges required.' }));
+      }
+
+      const targetId = req.params.id;
+      const targetUser = db.prepare(`SELECT * FROM _r_${collection.id} WHERE id = ?`).get(targetId);
+      if (!targetUser) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ code: 404, message: 'User not found.' }));
+      }
+
+      if (targetUser.role !== 'DRIVER') {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ code: 400, message: 'Target user is not a driver.' }));
+      }
+
+      const now = new Date().toISOString();
+      db.prepare(`UPDATE _r_${collection.id} SET approval_status = 'APPROVED', updated = ? WHERE id = ?`).run(now, targetId);
+
+      await e.app.reloadCachedCollections();
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ code: 200, message: 'Driver approved successfully.' }));
+    } catch (err) {
+      if (isDev) console.error('Driver Approval Error:', err.message);
       res.writeHead(500, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ code: 500, message: 'Internal server error.' }));
     }

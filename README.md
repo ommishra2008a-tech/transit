@@ -529,7 +529,7 @@ dist/assets/index-BdTmXRyi.js   669.26 kB │ gzip: 191.24 kB
 ## Troubleshooting Guide
 
 ### Login Fails with "Invalid email or password"
-- Verify user exists in database (`seed.js` default password: `123456password`).
+- Verify user account exists in database (or was created via development seed / signup).
 - Check backend console logs for connection issues.
 
 ### Signup Fails

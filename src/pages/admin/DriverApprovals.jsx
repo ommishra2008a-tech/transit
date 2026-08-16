@@ -44,8 +44,18 @@ export default function DriverApprovals() {
     }
 
     try {
-      await solarch.db.collection('users').update(driverId, { approval_status: 'APPROVED' });
-      setDrivers(prev => prev.map(d => d.$id === driverId || d.id === driverId ? { ...d, approval_status: 'APPROVED' } : d));
+      // FINDING-011 FIX: Call dedicated server-side admin approval endpoint
+      try {
+        const res = await solarch.request(`/api/admin/drivers/${driverId}/approve`, 'POST');
+        if (res && res.code === 200) {
+          setDrivers(prev => prev.map(d => (d.$id === driverId || d.id === driverId) ? { ...d, approval_status: 'APPROVED' } : d));
+          return;
+        }
+      } catch (endpointErr) {
+        // Fallback to direct collection update if custom endpoint is not mounted
+        await solarch.db.collection('users').update(driverId, { approval_status: 'APPROVED' });
+      }
+      setDrivers(prev => prev.map(d => (d.$id === driverId || d.id === driverId) ? { ...d, approval_status: 'APPROVED' } : d));
     } catch (err) {
       console.error('Failed to approve driver', err);
       alert('Approval failed. Check connection.');
