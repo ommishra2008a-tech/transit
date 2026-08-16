@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, User, Mail, Phone, Hash, ShieldCheck, Check } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, Hash, ShieldCheck, Check, Lock } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { solarch } from '../../lib/solarch';
 import AuthRequiredModal from '../../components/AuthRequiredModal';
@@ -20,6 +20,7 @@ export default function AddDriver() {
     email: '',
     phone: '',
     license: '',
+    password: '',
   });
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -35,12 +36,16 @@ export default function AddDriver() {
     setLoading(true);
     
     try {
+      const initialPassword = formData.password || 'InitialDriverPass@123';
       // Save to Solarch driver/users collection
       await solarch.db.collection('users').create({
-        ...formData,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        license: formData.license,
         role: 'DRIVER', // MUST be uppercase to match enum logic
-        password: '123456password', // default password
-        passwordConfirm: '123456password',
+        password: initialPassword,
+        passwordConfirm: initialPassword,
         approval_status: 'PENDING', // Default to PENDING for admin review flow
         created_at: new Date().toISOString()
       });
@@ -145,6 +150,19 @@ export default function AddDriver() {
                     id="license" required value={formData.license} onChange={handleChange}
                     type="text" placeholder="MP-09-XXXXXXXXX"
                     className="w-full bg-[#030712] border border-white/10 text-white text-[14px] placeholder:text-slate-600 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 h-[52px] rounded-xl pl-11 pr-4 outline-none transition-all shadow-inner font-mono tracking-widest uppercase"
+                  />
+                </div>
+
+                {/* Initial Password (Optional) */}
+                <div className="relative group">
+                  <div className="absolute left-4 top-[38px] text-slate-500 group-focus-within:text-blue-500 transition-colors pointer-events-none">
+                    <Lock size={18} />
+                  </div>
+                  <label className="text-[12px] font-medium text-slate-400 mb-1.5 block px-1 uppercase tracking-wider">Initial Password (Optional)</label>
+                  <input
+                    id="password" value={formData.password} onChange={handleChange}
+                    type="password" placeholder="Default: InitialDriverPass@123"
+                    className="w-full bg-[#030712] border border-white/10 text-white text-[14px] placeholder:text-slate-600 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 h-[52px] rounded-xl pl-11 pr-4 outline-none transition-all shadow-inner"
                   />
                 </div>
               </div>

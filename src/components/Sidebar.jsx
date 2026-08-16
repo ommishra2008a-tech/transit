@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useSidebar } from '../contexts/SidebarContext';
 import { 
   Home, Map as MapIcon, Navigation, Star, User as UserIcon, 
-  Settings as SettingsIcon, HelpCircle, Info, LogOut, Bus, Users, Clock, LayoutDashboard, X, ShieldAlert, Compass, Eye
+  Settings as SettingsIcon, HelpCircle, Info, LogOut, Bus, Users, Clock, LayoutDashboard, X, ShieldAlert
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -132,11 +132,10 @@ export default function Sidebar() {
                 );
               })}
 
-              {/* Explore Dashboards (Demo/View-Only Mode) */}
+              {/* Portals & Dashboards (with View-Only inspection for non-assigned roles) */}
               <div className="pt-5 mt-4 border-t border-white/5">
-                <div className="px-3 pb-2 flex items-center gap-1.5 text-[10px] uppercase font-bold text-amber-400/80 tracking-wider">
-                  <Compass size={12} />
-                  <span>Explore Dashboards (View Only)</span>
+                <div className="px-3 pb-2 flex items-center gap-1.5 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                  <span>Portals & Dashboards</span>
                 </div>
 
                 <div className="space-y-1">
@@ -153,7 +152,7 @@ export default function Sidebar() {
                       <span>Passenger View</span>
                     </div>
                     {role === 'PASSENGER' && (
-                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">Your Role</span>
+                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">Active</span>
                     )}
                   </button>
 
@@ -167,10 +166,12 @@ export default function Sidebar() {
                   >
                     <div className="flex items-center gap-3">
                       <Clock size={16} />
-                      <span>Driver View</span>
+                      <span>Driver Dashboard</span>
                     </div>
-                    {role !== 'DRIVER' && (
-                      <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-mono font-medium">Demo</span>
+                    {role === 'DRIVER' ? (
+                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">Active</span>
+                    ) : (
+                      <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-mono font-medium">View Only</span>
                     )}
                   </button>
 
@@ -184,10 +185,12 @@ export default function Sidebar() {
                   >
                     <div className="flex items-center gap-3">
                       <LayoutDashboard size={16} />
-                      <span>Admin View</span>
+                      <span>Admin Dashboard</span>
                     </div>
-                    {role !== 'ADMIN' && (
-                      <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-mono font-medium">Demo</span>
+                    {role === 'ADMIN' ? (
+                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">Active</span>
+                    ) : (
+                      <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-mono font-medium">View Only</span>
                     )}
                   </button>
                 </div>

@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, Search, MapPin, Navigation, Bus, Clock, Bell, User as UserIcon, Home, Star, Map as MapIcon, Heart, Compass } from 'lucide-react';
+import { Menu, Search, MapPin, Navigation, Bus, Clock, Bell, User as UserIcon, Home, Star, Map as MapIcon, Heart, Trash2, ArrowRight, Bookmark } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSidebar } from '../../contexts/SidebarContext';
 import { solarch } from '../../lib/solarch';
 import { fuzzySearch } from '../../utils/fuzzySearch';
+import { getTimeAwareGreeting } from '../../utils/greeting';
+import { getFavoritePlaces, removeFavoritePlace, getFavoriteRoutes, removeFavoriteRoute } from '../../utils/favorites';
 
 export default function PassengerHome() {
   const { user } = useAuth();
@@ -14,6 +16,23 @@ export default function PassengerHome() {
   const [buses, setBuses] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  
+  const [favoritePlaces, setFavoritePlaces] = useState([]);
+  const [favoriteRoutes, setFavoriteRoutes] = useState([]);
+  const [favFilterTab, setFavFilterTab] = useState('all'); // 'all' | 'places' | 'routes'
+  const favoritesRef = useRef(null);
+
+  // Load and subscribe to favorites updates
+  useEffect(() => {
+    const loadFavorites = () => {
+      setFavoritePlaces(getFavoritePlaces());
+      setFavoriteRoutes(getFavoriteRoutes());
+    };
+    loadFavorites();
+
+    window.addEventListener('smarttransit_favorites_updated', loadFavorites);
+    return () => window.removeEventListener('smarttransit_favorites_updated', loadFavorites);
+  }, []);
 
   // Fetch active trips (buses)
   useEffect(() => {
@@ -40,6 +59,7 @@ export default function PassengerHome() {
 
   const userName = user?.name || user?.email?.split('@')[0] || 'Passenger';
   const capitalizedName = userName.charAt(0).toUpperCase() + userName.slice(1);
+  const greeting = getTimeAwareGreeting();
 
   return (
     <div className="h-dvh bg-[#030712] text-white flex flex-col relative overflow-hidden">
@@ -72,7 +92,7 @@ export default function PassengerHome() {
           className="mb-8"
         >
           <h2 className="text-[28px] font-bold tracking-tight text-white flex items-center gap-2">
-            Good Morning, <br/> {capitalizedName} <span className="text-2xl animate-waving-hand origin-bottom-right inline-block">👋</span>
+            {greeting}, <br/> {capitalizedName} <span className="text-2xl animate-waving-hand origin-bottom-right inline-block">👋</span>
           </h2>
           <p className="text-slate-400 text-[15px] mt-1.5">Where do you want to go today?</p>
         </motion.div>
@@ -131,46 +151,183 @@ export default function PassengerHome() {
           </div>
 
           {/* Favourites */}
-          <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-md border border-amber-500/20 rounded-2xl p-4 flex flex-col items-center justify-center gap-3 shadow-[0_0_15px_rgba(245,158,11,0.1)] hover:shadow-[0_0_20px_rgba(245,158,11,0.2)] transition-all cursor-pointer">
-            <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center">
-              <Star size={20} className="fill-amber-400/20" />
+          <div 
+            onClick={() => favoritesRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            className="bg-gradient-to-br from-amber-500/15 to-orange-500/10 backdrop-blur-md border border-amber-500/30 rounded-2xl p-4 flex flex-col items-center justify-center gap-3 shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:shadow-[0_0_25px_rgba(245,158,11,0.25)] transition-all cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-full bg-amber-500/25 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Star size={20} className="fill-amber-400" />
             </div>
             <div className="text-center">
-              <p className="text-[12px] font-semibold text-amber-400">Favourites</p>
-              <p className="text-[10px] text-amber-500/60">Saved routes</p>
+              <p className="text-[12px] font-bold text-amber-400">Favourites</p>
+              <p className="text-[10px] text-amber-300 font-semibold">{favoritePlaces.length + favoriteRoutes.length} Saved</p>
             </div>
           </div>
         </motion.div>
 
-        {/* Explore Dashboards Demo Card */}
-        <motion.div 
+
+        {/* Dedicated Saved Places & Favourite Routes Section */}
+        <motion.div
+          ref={favoritesRef}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="mb-8 bg-gradient-to-r from-blue-900/30 via-[#0b101a] to-purple-900/30 border border-white/10 rounded-2xl p-4 shadow-xl flex items-center justify-between"
+          transition={{ delay: 0.28 }}
+          className="mb-8 bg-[#0b101a]/70 backdrop-blur-xl border border-white/10 rounded-3xl p-5 shadow-2xl"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
-              <Compass size={20} />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                <Bookmark size={18} className="fill-amber-400/30" />
+              </div>
+              <div>
+                <h3 className="text-[17px] font-bold text-white tracking-wide flex items-center gap-2">
+                  Saved & Favourites
+                </h3>
+                <p className="text-[11px] text-slate-400">Quick access to pinned places & starred buses</p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider">Explore Dashboards</h4>
-              <p className="text-[11px] text-slate-400 mt-0.5">Explore Driver & Admin controls (View Only)</p>
-            </div>
+            <span className="text-[11px] font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2.5 py-1 rounded-full">
+              {favoritePlaces.length + favoriteRoutes.length} Items
+            </span>
           </div>
-          <div className="flex gap-2 shrink-0">
+
+          {/* Filter Pills */}
+          <div className="flex gap-2 mb-4">
             <button
-              onClick={() => navigate('/driver')}
-              className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-lg text-xs font-semibold border border-white/10 transition-colors"
+              onClick={() => setFavFilterTab('all')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                favFilterTab === 'all'
+                  ? 'bg-amber-500 text-black shadow-[0_0_12px_rgba(245,158,11,0.4)]'
+                  : 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white'
+              }`}
             >
-              Driver
+              All ({favoritePlaces.length + favoriteRoutes.length})
             </button>
             <button
-              onClick={() => navigate('/admin')}
-              className="px-2.5 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-lg text-xs font-bold border border-blue-500/30 transition-colors"
+              onClick={() => setFavFilterTab('places')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                favFilterTab === 'places'
+                  ? 'bg-purple-600 text-white shadow-[0_0_12px_rgba(168,85,247,0.4)]'
+                  : 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white'
+              }`}
             >
-              Admin
+              📍 Places ({favoritePlaces.length})
             </button>
+            <button
+              onClick={() => setFavFilterTab('routes')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                favFilterTab === 'routes'
+                  ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)]'
+                  : 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white'
+              }`}
+            >
+              🚌 Routes ({favoriteRoutes.length})
+            </button>
+          </div>
+
+          {/* Favorites List Items */}
+          <div className="space-y-3">
+            {/* Show Saved Places */}
+            {(favFilterTab === 'all' || favFilterTab === 'places') && favoritePlaces.map((place) => (
+              <div 
+                key={place.id}
+                className="bg-white/5 hover:bg-white/10 border border-purple-500/20 hover:border-purple-500/40 rounded-2xl p-3.5 flex items-center justify-between transition-all group shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
+                    <MapPin size={20} />
+                  </div>
+                  <div>
+                    <h4 className="text-[14px] font-bold text-white group-hover:text-purple-300 transition-colors">
+                      {place.name || 'Pinned Location'}
+                    </h4>
+                    <p className="text-[11px] font-mono text-slate-400">
+                      {place.lat.toFixed(4)}, {place.lng.toFixed(4)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => navigate(`/passenger/map?lat=${place.lat}&lng=${place.lng}`)}
+                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl shadow-[0_0_10px_rgba(168,85,247,0.3)] transition-colors flex items-center gap-1"
+                  >
+                    <span>View Map</span>
+                    <ArrowRight size={14} />
+                  </button>
+                  <button
+                    onClick={() => removeFavoritePlace(place.id)}
+                    className="w-8 h-8 rounded-xl bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 flex items-center justify-center transition-colors"
+                    title="Remove from saved places"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {/* Show Favorite Routes */}
+            {(favFilterTab === 'all' || favFilterTab === 'routes') && favoriteRoutes.map((route) => {
+              const routeId = route.$id || route.id || route.bus_number;
+              return (
+                <div 
+                  key={routeId}
+                  className="bg-white/5 hover:bg-white/10 border border-blue-500/20 hover:border-blue-500/40 rounded-2xl p-3.5 flex items-center justify-between transition-all group shadow-sm"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+                      <Bus size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-[14px] font-bold text-white group-hover:text-blue-300 transition-colors">
+                        {route.bus_number}
+                      </h4>
+                      <p className="text-[11px] text-slate-400">
+                        {route.route_id || 'Active Route'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => navigate(`/passenger/track/${routeId}`)}
+                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-colors flex items-center gap-1"
+                    >
+                      <span>Track</span>
+                      <ArrowRight size={14} />
+                    </button>
+                    <button
+                      onClick={() => removeFavoriteRoute(routeId)}
+                      className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 hover:bg-rose-500/20 hover:text-rose-400 flex items-center justify-center transition-colors"
+                      title="Unfavorite route"
+                    >
+                      <Star size={16} className="fill-amber-400" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Empty State */}
+            {((favFilterTab === 'all' && favoritePlaces.length === 0 && favoriteRoutes.length === 0) ||
+              (favFilterTab === 'places' && favoritePlaces.length === 0) ||
+              (favFilterTab === 'routes' && favoriteRoutes.length === 0)) && (
+              <div className="py-6 px-4 bg-white/[0.02] border border-dashed border-white/10 rounded-2xl text-center">
+                <div className="w-10 h-10 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto mb-2.5">
+                  <Star size={20} />
+                </div>
+                <p className="text-xs font-semibold text-slate-300">No {favFilterTab === 'places' ? 'places' : favFilterTab === 'routes' ? 'routes' : 'favourites'} saved yet</p>
+                <p className="text-[11px] text-slate-500 mt-1 max-w-[260px] mx-auto">
+                  Drop a pin on the map or tap the star (⭐) icon on any bus to save it for quick access.
+                </p>
+                <button
+                  onClick={() => navigate('/passenger/map')}
+                  className="mt-3 px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl transition-colors"
+                >
+                  Explore Map
+                </button>
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -194,8 +351,8 @@ export default function PassengerHome() {
             ) : filteredBuses.length > 0 ? (
               filteredBuses.map((bus) => (
                 <div 
-                  key={bus.$id}
-                  onClick={() => navigate(`/passenger/track/${bus.$id}`)}
+                  key={bus.$id || bus.id || bus.bus_number}
+                  onClick={() => navigate(`/passenger/track/${encodeURIComponent(bus.$id || bus.id || bus.bus_number)}`)}
                   className="bg-[#0b101a]/80 backdrop-blur-xl border border-white/5 hover:border-blue-500/30 rounded-2xl p-4 flex flex-col gap-1 shadow-lg cursor-pointer group transition-all"
                 >
                   <div className="flex items-center justify-between">

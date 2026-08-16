@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, useDragControls } from 'framer-motion';
-import { ArrowLeft, Clock, MapPin, Navigation, Map as MapIcon, Share2, Crosshair, Star } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Polyline, ZoomControl } from 'react-leaflet';
+import { ArrowLeft, Clock, MapPin, Navigation, Map as MapIcon, Share2, Star } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import { solarch } from '../../lib/solarch';
 import { fetchRoadSnappedRoute } from '../../lib/osrm';
+import { isPlaceFavorite, saveFavoritePlace, removeFavoritePlace, isRouteFavorite, saveFavoriteRoute, removeFavoriteRoute } from '../../utils/favorites';
+import MapControls, { MapClickHandler, createMarkedPinIcon, createUserLocationIcon } from '../../components/MapControls';
 
 // Beautiful Bus Sticker
 const createBusIcon = (busNumber) => {
   return L.divIcon({
     className: 'custom-bus-marker',
     html: `
-      <div class="relative flex flex-col items-center group cursor-pointer" style="width: 56px; height: 56px; margin-left: -28px; margin-top: -28px;">
+      <div class="relative flex flex-col items-center group cursor-pointer" style="width: 56px; height: 56px;">
         <div class="absolute -top-10 bg-white border border-slate-200 text-slate-800 px-3 py-1 rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30 pointer-events-none">
           <p class="text-[12px] font-bold m-0 leading-tight">${busNumber}</p>
         </div>
@@ -22,7 +24,8 @@ const createBusIcon = (busNumber) => {
       </div>
     `,
     iconSize: [56, 56],
-    iconAnchor: [28, 28]
+    iconAnchor: [28, 28],
+    popupAnchor: [0, -28]
   });
 };
 
@@ -31,7 +34,7 @@ const createDestinationIcon = () => {
   return L.divIcon({
     className: 'custom-dest-marker',
     html: `
-      <div class="relative flex flex-col items-center" style="width: 40px; height: 60px; margin-left: -20px; margin-top: -60px;">
+      <div class="relative flex flex-col items-center" style="width: 40px; height: 60px;">
         <div class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center border-[3px] border-white shadow-[0_4px_15px_rgba(0,0,0,0.4)] z-10">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
         </div>
@@ -40,7 +43,8 @@ const createDestinationIcon = () => {
       </div>
     `,
     iconSize: [40, 60],
-    iconAnchor: [20, 60]
+    iconAnchor: [20, 60],
+    popupAnchor: [0, -60]
   });
 };
 
@@ -49,30 +53,20 @@ const createOriginIcon = () => {
   return L.divIcon({
     className: 'custom-origin-marker',
     html: `
-      <div class="relative flex flex-col items-center" style="width: 32px; height: 32px; margin-left: -16px; margin-top: -16px;">
+      <div class="relative flex flex-col items-center" style="width: 32px; height: 32px;">
         <div class="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center border-[3px] border-white shadow-[0_4px_15px_rgba(0,0,0,0.4)] z-10">
           <div class="w-2.5 h-2.5 bg-white rounded-full"></div>
         </div>
       </div>
     `,
     iconSize: [32, 32],
-    iconAnchor: [16, 16]
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
   });
 };
 
-const createUserIcon = () => {
-  return L.divIcon({
-    className: 'custom-user-marker',
-    html: `
-      <div class="w-6 h-6 rounded-full bg-blue-500 border-[3px] border-white shadow-xl flex items-center justify-center relative" style="margin-left: -12px; margin-top: -12px;">
-        <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
-        <div class="absolute inset-0 rounded-full border-2 border-blue-500 animate-ping opacity-70"></div>
-      </div>
-    `,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
-  });
-};
+// Indore Default Coordinates
+const INDORE_CENTER = [22.7196, 75.8577];
 
 export default function TrackBus() {
   const { id } = useParams();
@@ -86,72 +80,118 @@ export default function TrackBus() {
   const [mapRef, setMapRef] = useState(null);
   const dragControls = useDragControls();
   const [userLocation, setUserLocation] = useState(null);
-  const [locating, setLocating] = useState(false);
+  const [markedLocation, setMarkedLocation] = useState(null);
+  const [isMarkingMode, setIsMarkingMode] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [mapStyle, setMapStyle] = useState('satellite');
   const [isFavorited, setIsFavorited] = useState(false);
+  const [error, setError] = useState(null);
+
+  const [, setFavTick] = useState(0);
 
   useEffect(() => {
-    setIsFavorited(localStorage.getItem(`fav_${id}`) === 'true');
+    const handleFavUpdate = () => {
+      setFavTick(t => t + 1);
+      if (id && id !== 'undefined') setIsFavorited(isRouteFavorite(id));
+    };
+    handleFavUpdate();
+    window.addEventListener('smarttransit_favorites_updated', handleFavUpdate);
+    return () => window.removeEventListener('smarttransit_favorites_updated', handleFavUpdate);
   }, [id]);
 
   const toggleFavorite = () => {
-    const newVal = !isFavorited;
-    setIsFavorited(newVal);
-    if (newVal) localStorage.setItem(`fav_${id}`, 'true');
-    else localStorage.removeItem(`fav_${id}`);
+    const targetId = id || trip?.$id || trip?.id || trip?.bus_number;
+    if (!targetId) return;
+    if (isRouteFavorite(targetId)) {
+      removeFavoriteRoute(targetId);
+      setIsFavorited(false);
+    } else if (trip) {
+      saveFavoriteRoute(trip);
+      setIsFavorited(true);
+    }
   };
-
-  const [error, setError] = useState(null);
 
   // Fetch real trip details and subscribe to live telemetry
   useEffect(() => {
     let unsubscribe = null;
     const init = async () => {
       try {
-        const tripDoc = await solarch.db.collection('trips').getById(id);
-        if (!tripDoc) throw new Error("Trip not found");
-        setTrip(tripDoc);
+        let tripDoc = null;
 
-        // Fetch actual route stops
-        if (tripDoc.route_id) {
-          const stopsRes = await solarch.db.collection('stops').get({
-            filter: { route_id: tripDoc.route_id },
-            limit: 100
-          });
-          
-          if (stopsRes && stopsRes.items) {
-            const sortedStops = stopsRes.items.sort((a, b) => a.stop_order - b.stop_order);
-            setStops(sortedStops);
-            
-            // Try fetching road-snapped route
-            const coords = await fetchRoadSnappedRoute(sortedStops);
-            if (coords) {
-              setRouteLine(coords);
-              setRouteStatus('ok');
-            } else {
-              console.warn("Road routing unavailable from OSRM.");
-              setRouteLine([]); // Strictly do NOT fabricate straight-line geometry
-              setRouteStatus('failed');
-            }
+        // 1. Try getById if valid ID
+        if (id && id !== 'undefined') {
+          try {
+            tripDoc = await solarch.db.collection('trips').getById(id);
+          } catch (err) {
+            console.warn("Trip not found by ID, checking by bus_number", err);
           }
         }
 
-        // Subscribe to live location SSE Stream
-        unsubscribe = await solarch.db.collection('live_locations').subscribe(
-          { filter: { trip_id: id } },
-          (event) => {
-            if (event.action === 'create' || event.action === 'update') {
-               setTrip(prev => {
-                 if (!prev) return prev;
-                 return {
-                   ...prev,
-                   current_location: { lat: event.document.latitude, lng: event.document.longitude }
-                 };
-               });
+        // 2. Try querying by bus_number or route_id
+        if (!tripDoc && id && id !== 'undefined') {
+          const byBus = await solarch.db.collection('trips').get({
+            filter: { bus_number: id },
+            limit: 1
+          });
+          const docs = byBus?.items || byBus?.documents || [];
+          if (docs.length > 0) tripDoc = docs[0];
+        }
+
+        // 3. Graceful fallback: Load any active in-progress trip or first trip
+        if (!tripDoc) {
+          const anyTrip = await solarch.db.collection('trips').get({ limit: 1 });
+          const anyDocs = anyTrip?.items || anyTrip?.documents || [];
+          if (anyDocs.length > 0) tripDoc = anyDocs[0];
+        }
+
+        if (tripDoc) {
+          setTrip(tripDoc);
+          const resolvedTripId = tripDoc.$id || tripDoc.id || tripDoc.bus_number;
+          setIsFavorited(isRouteFavorite(resolvedTripId));
+
+          // Fetch actual route stops
+          if (tripDoc.route_id) {
+            const stopsRes = await solarch.db.collection('stops').get({
+              filter: { route_id: tripDoc.route_id },
+              limit: 100
+            });
+            
+            if (stopsRes && stopsRes.items) {
+              const sortedStops = stopsRes.items.sort((a, b) => a.stop_order - b.stop_order);
+              setStops(sortedStops);
+              
+              // Road-snapped geometry fetch with zero straight-line fabrication
+              const coords = await fetchRoadSnappedRoute(sortedStops);
+              if (coords) {
+                setRouteLine(coords);
+                setRouteStatus('ok');
+              } else {
+                console.warn("Road routing unavailable from OSRM.");
+                setRouteLine([]);
+                setRouteStatus('failed');
+              }
             }
           }
-        );
+
+          // Subscribe to live location SSE Stream
+          unsubscribe = await solarch.db.collection('live_locations').subscribe(
+            { filter: { trip_id: resolvedTripId } },
+            (event) => {
+              if (event.action === 'create' || event.action === 'update') {
+                 setTrip(prev => {
+                   if (!prev) return prev;
+                   return {
+                     ...prev,
+                     current_location: { lat: event.document.latitude, lng: event.document.longitude },
+                     speed_kmh: event.document.speed || prev.speed_kmh || 0
+                   };
+                 });
+              }
+            }
+          );
+        } else {
+          setError('No active bus found for tracking.');
+        }
       } catch (err) {
         console.error('Failed to load trip from DB:', err);
         setError('This bus is currently unavailable or the trip has ended.');
@@ -179,62 +219,49 @@ export default function TrackBus() {
     }
   };
 
-  const toggleLocation = () => {
-    if (userLocation) {
-      // Toggle Off
-      setUserLocation(null);
-      return;
-    }
-    
-    // Toggle On
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
-      return;
-    }
-    
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setUserLocation({ lat: latitude, lng: longitude });
-        setLocating(false);
-        if (mapRef) {
-          mapRef.flyTo([latitude, longitude], 16, { animate: true, duration: 1.5 });
-        }
-      },
-      (error) => {
-        console.error("Location error:", error);
-        alert("Could not retrieve your location. Please check permissions.");
-        setLocating(false);
-      },
-      { enableHighAccuracy: true }
-    );
-  };
-
   const handleShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Track My Bus',
+          title: `Track Bus ${trip?.bus_number || ''}`,
           text: `Track my bus on route ${trip?.route_id || ''} live!`,
           url: window.location.href,
         });
       } catch (err) {
-        console.log('User cancelled share or error:', err);
+        if (err.name !== 'AbortError') {
+          navigator.clipboard?.writeText(window.location.href);
+          alert('Link copied to clipboard!');
+        }
       }
     } else {
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard?.writeText(window.location.href);
       alert('Link copied to clipboard!');
     }
   };
 
-  const mapCenter = trip?.current_location ? [trip.current_location.lat, trip.current_location.lng] : (stops.length > 0 ? [stops[0].latitude, stops[0].longitude] : [22.7196, 75.8577]);
+  // Compute live bus location with zero ReferenceErrors
+  const busLocation = (trip?.current_location && typeof trip.current_location.lat === 'number' && typeof trip.current_location.lng === 'number')
+    ? { lat: trip.current_location.lat, lng: trip.current_location.lng, speed: trip.speed_kmh || 0 }
+    : (typeof trip?.latitude === 'number' && typeof trip?.longitude === 'number'
+        ? { lat: trip.latitude, lng: trip.longitude, speed: trip.speed_kmh || 0 }
+        : null);
+
+  const mapCenter = busLocation
+    ? [busLocation.lat, busLocation.lng]
+    : (stops.length > 0 && typeof stops[0].latitude === 'number' && typeof stops[0].longitude === 'number'
+        ? [stops[0].latitude, stops[0].longitude]
+        : INDORE_CENTER);
 
   return (
     <div className="h-dvh bg-[#030712] text-white flex flex-col relative overflow-hidden">
       
       {/* Real Interactive Leaflet Map Background */}
-      <div className="absolute inset-0 z-0 bg-[#030712]">
+      <div 
+        className="absolute inset-0 z-0 bg-[#030712]"
+        onClick={() => {
+          if (!isMinimized) setIsMinimized(true);
+        }}
+      >
         <MapContainer 
           center={mapCenter} 
           zoom={15} 
@@ -242,13 +269,11 @@ export default function TrackBus() {
           ref={setMapRef}
           style={{ width: '100%', height: '100%', background: '#030712' }}
         >
-          <ZoomControl position="bottomright" />
-          
           <TileLayer
             url={mapStyle === 'satellite' 
               ? "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}" 
-              : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"}
-            attribution='&copy; Map tiles'
+              : "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"}
+            attribution='&copy; Google Maps'
           />
           
           {/* Draw Route Polyline only when valid road geometry exists */}
@@ -266,18 +291,113 @@ export default function TrackBus() {
 
           {/* Draw Intermediate Stops */}
           {stops.length > 2 && stops.slice(1, -1).map((stop) => (
-             <Marker key={stop.$id} position={[stop.latitude, stop.longitude]} icon={L.divIcon({ className: 'bg-white rounded-full border-[2px] border-blue-500 shadow-md', iconSize: [12, 12] })} />
+             <Marker key={stop.$id || stop.id} position={[stop.latitude, stop.longitude]} icon={L.divIcon({ className: 'bg-white rounded-full border-[2px] border-blue-500 shadow-md', iconSize: [10, 10] })} />
           ))}
 
-          {/* Draw Live Bus */}
-          {!loading && trip?.current_location && (
-            <Marker position={[trip.current_location.lat, trip.current_location.lng]} icon={createBusIcon(trip.bus_number)} />
+          {/* Real Telemetry Bus Marker */}
+          {busLocation && (
+            <Marker position={[busLocation.lat, busLocation.lng]} icon={createBusIcon(trip?.bus_number || 'BUS')}>
+              <Popup className="custom-popup">
+                <div className="font-bold text-slate-800">{trip?.bus_number}</div>
+                <div className="text-xs text-slate-500 mt-1">{trip?.route_id}</div>
+                <div className="text-xs font-bold text-blue-600 mt-2">{busLocation.speed || 0} km/h • Live</div>
+              </Popup>
+            </Marker>
           )}
 
           {/* Render User Location Marker */}
           {userLocation && (
-            <Marker position={[userLocation.lat, userLocation.lng]} icon={createUserIcon()} />
+            <Marker position={[userLocation.lat, userLocation.lng]} icon={createUserLocationIcon()}>
+              <Popup className="custom-popup">
+                <div className="p-1 text-slate-800 text-xs">
+                  <p className="font-bold">📍 Your Current Position</p>
+                  <p className="text-[11px] font-mono text-slate-600 mt-0.5">{userLocation.lat.toFixed(5)}, {userLocation.lng.toFixed(5)}</p>
+                </div>
+              </Popup>
+            </Marker>
           )}
+
+          {/* Render Dropped / Marked Pin */}
+          {markedLocation && (
+            <Marker position={[markedLocation.lat, markedLocation.lng]} icon={createMarkedPinIcon()}>
+              <Popup className="custom-popup">
+                <div className="p-2 text-slate-800 text-xs min-w-[170px]">
+                  <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-slate-200">
+                    <p className="font-bold text-purple-700 flex items-center gap-1">📍 Marked Location</p>
+                    <button
+                      onClick={() => {
+                        if (isPlaceFavorite(markedLocation.lat, markedLocation.lng)) {
+                          removeFavoritePlace(markedLocation);
+                        } else {
+                          saveFavoritePlace({
+                            name: `Pin (${markedLocation.lat.toFixed(3)}, ${markedLocation.lng.toFixed(3)})`,
+                            lat: markedLocation.lat,
+                            lng: markedLocation.lng
+                          });
+                        }
+                      }}
+                      className={`p-1 rounded-md transition-colors ${
+                        isPlaceFavorite(markedLocation.lat, markedLocation.lng)
+                          ? 'bg-amber-100 text-amber-600'
+                          : 'bg-slate-100 text-slate-500 hover:text-amber-600'
+                      }`}
+                      title={isPlaceFavorite(markedLocation.lat, markedLocation.lng) ? "Remove from Favorites" : "Save to Favorites"}
+                    >
+                      <Star size={14} fill={isPlaceFavorite(markedLocation.lat, markedLocation.lng) ? "currentColor" : "none"} />
+                    </button>
+                  </div>
+                  <p className="text-[11px] font-mono text-slate-600 my-1.5">{markedLocation.lat.toFixed(5)}, {markedLocation.lng.toFixed(5)}</p>
+                  <div className="pt-1.5 border-t border-slate-200 flex items-center justify-between gap-1.5">
+                    <button
+                      onClick={() => setMarkedLocation(null)}
+                      className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded text-[11px] font-bold transition-colors"
+                    >
+                      Remove
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (isPlaceFavorite(markedLocation.lat, markedLocation.lng)) {
+                          removeFavoritePlace(markedLocation);
+                        } else {
+                          saveFavoritePlace({
+                            name: `Pin (${markedLocation.lat.toFixed(3)}, ${markedLocation.lng.toFixed(3)})`,
+                            lat: markedLocation.lat,
+                            lng: markedLocation.lng
+                          });
+                        }
+                      }}
+                      className={`px-2 py-1 rounded text-[11px] font-bold transition-colors ${
+                        isPlaceFavorite(markedLocation.lat, markedLocation.lng)
+                          ? 'bg-amber-500 text-white shadow-sm'
+                          : 'bg-amber-50 hover:bg-amber-100 text-amber-700'
+                      }`}
+                    >
+                      {isPlaceFavorite(markedLocation.lat, markedLocation.lng) ? '★ Saved' : '☆ Save'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        const shareUrl = `https://maps.google.com/?q=${markedLocation.lat},${markedLocation.lng}`;
+                        navigator.clipboard?.writeText(shareUrl);
+                        alert('Marked location coordinates copied!');
+                      }}
+                      className="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded text-[11px] font-bold transition-colors"
+                    >
+                      Share
+                    </button>
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          )}
+
+          {/* Capture Map Clicks for Dropping Pin */}
+          <MapClickHandler
+            isMarkingMode={isMarkingMode}
+            onMapClick={(latlng) => {
+              setMarkedLocation(latlng);
+              setIsMarkingMode(false);
+            }}
+          />
         </MapContainer>
 
         {/* Gradient overlays to blend map into UI */}
@@ -292,9 +412,6 @@ export default function TrackBus() {
         <div className="flex gap-3 pointer-events-auto">
           <button onClick={toggleFavorite} className={`w-12 h-12 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center transition-colors shadow-lg ${isFavorited ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-[#0b101a]/90 text-white hover:bg-white/10'}`}>
             <Star size={20} fill={isFavorited ? "currentColor" : "none"} />
-          </button>
-          <button onClick={handleShare} className="w-12 h-12 rounded-full bg-[#0b101a]/90 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors shadow-lg text-white">
-            <Share2 size={20} />
           </button>
         </div>
       </header>
@@ -318,43 +435,23 @@ export default function TrackBus() {
         </div>
       )}
 
-      {/* Floating Action Buttons */}
-      <motion.div 
-        animate={{ y: isMinimized ? 0 : -20 }}
-        className="absolute right-5 bottom-[280px] z-[400] flex flex-col gap-3"
-      >
-        <button 
-          onClick={toggleLocation}
-          disabled={locating}
-          className={`w-12 h-12 rounded-full flex items-center justify-center shadow-xl transition-colors border \${userLocation ? 'bg-blue-600 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' : 'bg-[#0b101a]/90 backdrop-blur-md border-white/10 hover:bg-white/10 text-white'} \${locating ? 'opacity-70 animate-pulse' : ''}`}
-        >
-          <Crosshair size={22} />
-        </button>
-        <button 
-          onClick={() => setMapStyle(mapStyle === 'satellite' ? 'dark' : 'satellite')}
-          className="w-12 h-12 rounded-full bg-[#0b101a]/90 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors shadow-lg text-slate-300"
-        >
-          <MapIcon size={20} />
-        </button>
-      </motion.div>
-
-      {/* Required CSS override for Leaflet zoom controls to fit dark theme */}
-      <style>{`
-        .leaflet-control-zoom {
-          border: none !important;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
-          margin-bottom: 30vh !important;
-        }
-        .leaflet-control-zoom a {
-          background-color: rgba(11, 16, 26, 0.9) !important;
-          color: white !important;
-          border-color: rgba(255,255,255,0.1) !important;
-          backdrop-filter: blur(8px);
-        }
-        .leaflet-control-zoom a:hover {
-          background-color: rgba(255, 255, 255, 0.1) !important;
-        }
-      `}</style>
+      {/* Unified Professional Map Controls */}
+      <MapControls
+        mapRef={mapRef}
+        userLocation={userLocation}
+        setUserLocation={setUserLocation}
+        markedLocation={markedLocation}
+        setMarkedLocation={setMarkedLocation}
+        isMarkingMode={isMarkingMode}
+        setIsMarkingMode={setIsMarkingMode}
+        mapStyle={mapStyle}
+        setMapStyle={setMapStyle}
+        onShare={handleShare}
+        shareTitle={`Track Bus ${trip?.bus_number || ''}`}
+        shareText={`Track bus ${trip?.bus_number || ''} live on route ${trip?.route_id || ''} with SmartTransit.`}
+        customBottomClass="top-24 sm:top-28"
+        customRightClass="right-4 sm:right-6"
+      />
 
 
       {/* Bottom Information Card */}
@@ -368,17 +465,20 @@ export default function TrackBus() {
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={{ top: 0.05, bottom: 0.5 }}
         onDragEnd={(e, info) => {
-          if (info.offset.y > 50) setIsMinimized(true);
-          if (info.offset.y < -50) setIsMinimized(false);
+          if (info.offset.y > 40) setIsMinimized(true);
+          if (info.offset.y < -40) setIsMinimized(false);
         }}
         className="absolute bottom-0 left-0 right-0 z-[500] bg-[#0b101a]/95 backdrop-blur-xl border-t border-white/10 rounded-t-[32px] p-6 pb-12 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] touch-none pointer-events-auto"
       >
         {/* Drag Indicator */}
         <div 
-          className="w-full pt-2 pb-6 -mt-2 -mb-4 flex justify-center cursor-grab active:cursor-grabbing shrink-0"
-          onPointerDown={(e) => dragControls.start(e)}
+          onClick={() => setIsMinimized(!isMinimized)}
+          className="w-full pt-2 pb-6 -mt-2 -mb-4 flex justify-center cursor-pointer shrink-0"
         >
-          <div className="w-12 h-1.5 bg-white/20 rounded-full"></div>
+          <div 
+            className="w-12 h-1.5 bg-white/20 hover:bg-white/40 rounded-full transition-colors cursor-grab active:cursor-grabbing"
+            onPointerDown={(e) => dragControls.start(e)}
+          ></div>
         </div>
 
         <div 

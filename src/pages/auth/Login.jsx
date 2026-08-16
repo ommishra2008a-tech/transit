@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, Bus, ShieldCheck, ArrowRight, Check, Zap, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, Bus, ShieldCheck, ArrowRight, Check, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import SmartTransitLogo from '../../components/SmartTransitLogo';
 
@@ -23,7 +23,6 @@ export default function Login() {
   }, [clearError]);
 
   // Single source of truth for post-login navigation.
-  // When user state becomes set (after login or from localStorage cache), navigate.
   useEffect(() => {
     if (user && !loading) {
       let role = (user.role || 'PASSENGER').toUpperCase();
@@ -38,15 +37,13 @@ export default function Login() {
   }, [user, loading, navigate]);
 
   const roleAccounts = {
-    PASSENGER: { email: 'passenger@transit.dev', label: 'Passenger', route: '/passenger', icon: User },
-    DRIVER: { email: 'driver@transit.dev', label: 'Driver', route: '/driver', icon: Bus },
-    ADMIN: { email: 'admin@transit.dev', label: 'Admin', route: '/admin', icon: ShieldCheck },
+    PASSENGER: { label: 'Passenger', route: '/passenger', icon: User, placeholder: 'passenger@transit.dev' },
+    DRIVER: { label: 'Driver', route: '/driver', icon: Bus, placeholder: 'driver@transit.dev' },
+    ADMIN: { label: 'Admin', route: '/admin', icon: ShieldCheck, placeholder: 'admin@transit.dev' },
   };
 
   const handleTabChange = (key) => {
     setActiveTab(key);
-    setEmail(roleAccounts[key].email);
-    setPassword('');
     setLoginError('');
     clearError();
   };
@@ -62,25 +59,14 @@ export default function Login() {
     }
     
     try {
-      await login(email, password);
-      // Navigation is handled by the useEffect above reacting to user state change
+      await login(email.trim(), password);
     } catch (err) {
       setLoginError(err.message || 'Invalid email or password.');
     }
   };
 
-  const handleDemoAccess = async () => {
-    setLoginError('');
-    clearError();
-    const demoEmail = roleAccounts[activeTab].email;
-    setEmail(demoEmail);
-    setPassword('123456password');
-    try {
-      await login(demoEmail, '123456password');
-      // Navigation is handled by the useEffect above reacting to user state change
-    } catch (err) {
-      setLoginError(err.message || 'Demo Login failed.');
-    }
+  const handleForgotPassword = () => {
+    setLoginError('Password Reset: Please contact your fleet administrator or system support.');
   };
 
   return (
@@ -90,7 +76,7 @@ export default function Login() {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none" />
 
-      {/* Adding a subtle cinematic overlay image simulation */}
+      {/* Cinematic subtle background image */}
       <div className="absolute inset-0 opacity-[0.03] bg-[url('https://images.unsplash.com/photo-1555626906-fcf10d6851b4?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center pointer-events-none mix-blend-screen"></div>
 
       <motion.div
@@ -107,7 +93,7 @@ export default function Login() {
           
           <div className="text-center mb-7">
             <h1 className="text-2xl font-bold text-white tracking-tight">Welcome Back!</h1>
-            <p className="text-slate-400 text-sm mt-1">Sign in to continue your journey</p>
+            <p className="text-slate-400 text-sm mt-1">Sign in to your account</p>
           </div>
 
           {loginError && (
@@ -121,7 +107,7 @@ export default function Login() {
           )}
 
           <div className="space-y-6">
-            {/* Role Tabs */}
+            {/* Role Portal Selection Tabs */}
             <div className="flex bg-[#070b13] border border-white/5 rounded-[18px] p-1.5 shadow-inner">
               {Object.entries(roleAccounts).map(([key, acc]) => {
                 const Icon = acc.icon;
@@ -153,7 +139,7 @@ export default function Login() {
                 <input
                   id="email"
                   type="email"
-                  placeholder="Email Address"
+                  placeholder={roleAccounts[activeTab]?.placeholder || "Email Address"}
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setLoginError(''); }}
                   required
@@ -193,7 +179,7 @@ export default function Login() {
                   <input type="checkbox" className="hidden" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
                   <span className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">Remember me</span>
                 </label>
-                <button type="button" onClick={() => alert('Demo Passwords: 123456password')} className="text-xs text-blue-500 hover:text-blue-400 font-medium transition-colors">
+                <button type="button" onClick={handleForgotPassword} className="text-xs text-blue-500 hover:text-blue-400 font-medium transition-colors">
                   Forgot Password?
                 </button>
               </div>
@@ -212,23 +198,6 @@ export default function Login() {
                 )}
               </button>
             </form>
-
-            <div className="flex items-center justify-center gap-4">
-              <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-white/10" />
-              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">OR</span>
-              <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-white/10" />
-            </div>
-
-            {/* One-Click Demo Access Button */}
-            <button
-              type="button"
-              onClick={handleDemoAccess}
-              disabled={loading}
-              className="w-full h-[56px] flex items-center justify-center gap-2 bg-[#070b13] hover:bg-[#0f172a] border border-white/5 hover:border-white/10 text-slate-300 hover:text-white font-medium text-[14px] rounded-2xl transition-all shadow-inner"
-            >
-              <Zap size={18} className="text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.5)]" />
-              <span>One-Click Demo Access</span>
-            </button>
           </div>
           
           <div className="mt-10 pt-6 border-t border-white/5 flex items-center justify-center gap-6 text-[11px] font-medium text-slate-500 uppercase tracking-wider">

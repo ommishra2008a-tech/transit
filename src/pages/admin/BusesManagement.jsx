@@ -1,16 +1,31 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Search, Plus, Bus, Filter } from 'lucide-react';
+import { ArrowLeft, Search, Plus, Bus, Filter, Star } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 import { solarch } from '../../lib/solarch';
 import { fuzzySearch } from '../../utils/fuzzySearch';
+import { isRouteFavorite, saveFavoriteRoute, removeFavoriteRoute } from '../../utils/favorites';
+import AuthRequiredModal from '../../components/AuthRequiredModal';
 
 export default function BusesManagement() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [buses, setBuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [, setFavVersion] = useState(0);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authActionName, setAuthActionName] = useState('managing fleet');
+
+  const isRealAdmin = user && (user.role || '').toUpperCase() === 'ADMIN';
+
+  useEffect(() => {
+    const handleFavUpdate = () => setFavVersion(v => v + 1);
+    window.addEventListener('smarttransit_favorites_updated', handleFavUpdate);
+    return () => window.removeEventListener('smarttransit_favorites_updated', handleFavUpdate);
+  }, []);
 
   useEffect(() => {
     const fetchBuses = async () => {
@@ -27,19 +42,49 @@ export default function BusesManagement() {
     fetchBuses();
   }, []);
 
-  const tabs = ['All', 'Active', 'Running', 'Offline'];
+  const tabs = ['All', '★ Favorites', 'Active', 'Running', 'Offline'];
 
   const displayBuses = buses.map(b => ({
-    $id: b.$id,
-    bus_number: b.bus_number,
-    route_id: b.route_id,
-    status: b.status === 'IN_PROGRESS' ? 'Running' : b.status === 'SCHEDULED' ? 'Active' : 'Offline'
+    $id: b.$id || b.id || b.bus_number,
+    id: b.$id || b.id || b.bus_number,
+    bus_number: b.bus_number || 'BUS-00X',
+    route_id: b.route_id || 'Route Information',
+    status: b.status === 'IN_PROGRESS' ? 'Running' : b.status === 'SCHEDULED' ? 'Active' : 'Offline',
+    original: b
   }));
 
-  const statusFilteredBuses = displayBuses.filter(bus => activeTab === 'All' || bus.status === activeTab);
+  const statusFilteredBuses = displayBuses.filter(bus => {
+    if (activeTab === 'All') return true;
+    if (activeTab === '★ Favorites') return isRouteFavorite(bus.$id || bus.id || bus.bus_number);
+    return bus.status === activeTab;
+  });
   
   // Apply fuzzy search
   const filteredBuses = fuzzySearch(searchQuery, statusFilteredBuses, ['bus_number', 'route_id']);
+
+  const handleAddDriverClick = () => {
+    if (!isRealAdmin) {
+      setAuthActionName('adding drivers');
+      setAuthModalOpen(true);
+      return;
+    }
+    navigate('/admin/drivers/add');
+  };
+
+  const handleToggleFavorite = (e, bus) => {
+    e.stopPropagation();
+    if (!isRealAdmin) {
+      setAuthActionName('saving favorite buses');
+      setAuthModalOpen(true);
+      return;
+    }
+    const id = bus.$id || bus.id || bus.bus_number;
+    if (isRouteFavorite(id)) {
+      removeFavoriteRoute(id);
+    } else {
+      saveFavoriteRoute(bus.original || bus);
+    }
+  };
 
   return (
     <div className="h-dvh bg-[#030712] text-white flex flex-col relative overflow-hidden">
@@ -53,9 +98,19 @@ export default function BusesManagement() {
             <button onClick={() => navigate(-1)} className="text-slate-400 hover:text-white transition-colors">
               <ArrowLeft size={24} />
             </button>
-            <h1 className="text-[20px] font-bold tracking-wide">Buses</h1>
+            <h1 className="text-[20px] font-bold tracking-wide flex items-center gap-2">
+              Buses
+              {!isRealAdmin && (
+                <span className="text-[11px] px-2 py-0.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full font-normal">
+                  View Only
+                </span>
+              )}
+            </h1>
           </div>
-          <button onClick={() => navigate('/admin/drivers/add')} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-xl text-[12px] font-bold transition-colors shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+          <button 
+            onClick={handleAddDriverClick} 
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-xl text-[12px] font-bold transition-colors shadow-[0_0_15px_rgba(37,99,235,0.4)]"
+          >
             <Plus size={16} strokeWidth={3} />
             Add Driver
           </button>
@@ -119,7 +174,11 @@ export default function BusesManagement() {
           };
 
           return (
-            <div key={bus.$id} className="bg-[#0b101a]/80 backdrop-blur-md border border-white/5 hover:border-blue-500/30 rounded-2xl p-4 flex items-center justify-between shadow-lg cursor-pointer transition-colors group">
+            <div 
+              key={bus.$id} 
+              onClick={() => navigate(`/passenger/track/${bus.$id || bus.bus_number}`)}
+              className="bg-[#0b101a]/80 backdrop-blur-md border border-white/5 hover:border-blue-500/30 rounded-2xl p-4 flex items-center justify-between shadow-lg cursor-pointer transition-colors group"
+            >
               <div className="flex items-center gap-4">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
                   bus.status === 'Offline' ? 'bg-white/5 text-slate-500' : 'bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-white'
@@ -131,7 +190,18 @@ export default function BusesManagement() {
                   <p className="text-[11px] text-slate-400 mt-0.5">{bus.route_id}</p>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={(e) => handleToggleFavorite(e, bus)}
+                  className={`p-2 rounded-xl transition-all ${
+                    isRouteFavorite(bus.$id || bus.bus_number)
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                      : 'bg-white/5 text-slate-400 hover:text-white border border-white/5'
+                  }`}
+                  title={isRouteFavorite(bus.$id || bus.bus_number) ? "Remove from Favorites" : "Save to Favorites"}
+                >
+                  <Star size={16} fill={isRouteFavorite(bus.$id || bus.bus_number) ? "currentColor" : "none"} />
+                </button>
                 {getStatusBadge(bus.status)}
               </div>
             </div>
@@ -145,6 +215,12 @@ export default function BusesManagement() {
         )}
       </div>
 
+      <AuthRequiredModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        requiredRole="Admin"
+        actionName={authActionName}
+      />
     </div>
   );
 }

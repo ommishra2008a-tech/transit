@@ -51,46 +51,33 @@ export function AuthProvider({ children }) {
 
   const hasInitialized = useRef(false);
 
-  // Application starts -> Try auth refresh -> 404 -> Catch 404 -> Read localStorage -> Restore user -> Set loading = false
   useEffect(() => {
     const initAuth = async () => {
       if (hasInitialized.current) return;
       hasInitialized.current = true;
       
-      console.log('[AUTH] initialization started');
       const token = localStorage.getItem('solarch_token');
       
       if (!token) {
-        console.log('[AUTH] no token found, clearing state');
         setUser(null);
         setLoading(false);
         return;
       }
 
       try {
-        console.log('[AUTH] attempting refresh');
-        // This will throw or return cached user internally if 404
         const activeUser = await solarch.auth.getUser();
         if (activeUser) {
-          console.log('[AUTH] restored user:', activeUser);
           setUser(activeUser);
           localStorage.setItem('solarch_user', JSON.stringify(activeUser));
         }
       } catch (err) {
-        console.log('[AUTH] refresh failed or unavailable:', err.message);
-        console.log('[AUTH] restoring local cache');
-        
-        // Fallback explicitly handled here as well, just in case solarch.js throws
         const cachedUser = getCachedUser();
         if (cachedUser) {
-          console.log('[AUTH] restored user from cache:', cachedUser);
           setUser(cachedUser);
         } else {
-          console.log('[AUTH] no valid cache, clearing state');
           setUser(null);
         }
       } finally {
-        console.log('[AUTH] initialization completed');
         setLoading(false);
       }
     };
